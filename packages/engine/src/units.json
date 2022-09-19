@@ -1,0 +1,227 @@
+[
+  {
+    "name": "Summoner",
+    "description": "In the midst of chaos, there is opportunity.",
+    "cost": 1,
+    "damage": 3,
+    "health": 10,
+    "movement": 1,
+    "type": "Types.ground"
+  },
+  {
+    "name": "Boom Brothers",
+    "description": "A rather devastating duo",
+    "cost": 3,
+    "damage": 4,
+    "health": 4,
+    "movement": 2,
+    "type": "Types.ground"
+  },
+  {
+    "name": "Nomad",
+    "description": "Swift in life, swift in death.",
+    "cost": 1,
+    "damage": 1,
+    "health": 1,
+    "movement": 2,
+    "type": "Types.ground"
+  },
+  {
+    "name": "Enforcer",
+    "description": "Anything you want done, with menace.",
+    "cost": 1,
+    "damage": 1,
+    "health": 2,
+    "movement": 1,
+    "type": "Types.ground"
+  },
+  {
+    "name": "Rageclaws",
+    "description": "Anger is a justifiable response.",
+    "cost": 2,
+    "damage": 3,
+    "health": 3,
+    "movement": 1,
+    "type": "Types.ground"
+  },
+  {
+    "name": "Fire Dragon",
+    "description": "Fire dragons erupt in flames from the womb.",
+    "cost": 6,
+    "damage": 8,
+    "health": 6,
+    "movement": 3,
+    "type": "Types.flying"
+  },
+  {
+    "name": "Emberstrike",
+    "description": "Born of lava and anger.",
+    "cost": 5,
+    "damage": 7,
+    "health": 6,
+    "movement": 3,
+    "type": "Types.ground"
+  },
+  {
+    "name": "Scavenger",
+    "description": "Who's a good boy?",
+    "cost": 3,
+    "damage": 4,
+    "health": 3,
+    "movement": 3,
+    "type": "Types.ground"
+  },
+  {
+    "name": "Batariel",
+    "description": "Hell is missing their employee of the month.",
+    "cost": 6,
+    "damage": 8,
+    "health": 9,
+    "movement": 2,
+    "type": "Types.ground"
+  },
+  {
+    "name": "Burning Spears",
+    "description": "Upgrade cattle prods are effective weapons.",
+    "cost": 1,
+    "damage": 2,
+    "health": 1,
+    "movement": 1,
+    "type": "Types.ground"
+  },
+  {
+    "name": "Fire Stalker",
+    "description": "Like their prey charred, very charred.",
+    "cost": 4,
+    "damage": 5,
+    "health": 3,
+    "movement": 3,
+    "type": "Types.ground"
+  },
+  {
+    "name": "Fire Worm",
+    "description": "The worm riders are a very original idea.",
+    "cost": 6,
+    "damage": 7,
+    "health": 7,
+    "movement": 3,
+    "type": "Types.flying"
+  },
+  {
+    "name": "Firedancer",
+    "description": "Immolation by request.",
+    "cost": 2,
+    "damage": 2,
+    "health": 2,
+    "movement": 3,
+    "type": "Types.flying"
+  },
+  {
+    "name": "Firesworn",
+    "description": "Cannon fodder.",
+    "cost": 2,
+    "damage": 3,
+    "health": 2,
+    "movement": 2,
+    "type": "Types.ground"
+  },
+  {
+    "name": "Giant Slayer",
+    "description": "The bigger they are, the harder they fall.",
+    "cost": 3,
+    "damage": 7,
+    "health": 1,
+    "movement": 2,
+    "type": "Types.ground"
+  },
+  {
+    "name": "Gladiatrix",
+    "description": "What is life but an arena.",
+    "cost": 3,
+    "damage": 3,
+    "health": 3,
+    "movement": 3,
+    "type": "Types.ground"
+  },
+  {
+    "name": "Juggernaut",
+    "description": "Suprisingly affectionate parental figures.",
+    "cost": 5,
+    "damage": 6,
+    "health": 6,
+    "movement": 3,
+    "type": "Types.ground"
+  },
+  {
+    "name": "Magma Fiend",
+    "description": "Slow, unrelenting, painful death.",
+    "cost": 5,
+    "damage": 9,
+    "health": 5,
+    "movement": 1,
+    "type": "Types.flying"
+  },
+  {
+    "name": "Magma Hurler",
+    "description": "Born from the hear of an erupting volcano.",
+    "cost": 3,
+    "damage": 5,
+    "health": 3,
+    "movement": 2,
+    "type": "Types.ground"
+  },
+  {
+    "name": "Magma Spore",
+    "description": "Scientists remain uncertain on their sentiency.",
+    "cost": 2,
+    "damage": 2,
+    "health": 2,
+    "movement": 3,
+    "type": "Types.flying"
+  },
+  {
+    "name": "Magma Turret",
+    "description": "Prone to self-destruct at a moments notice.",
+    "cost": 1,
+    "damage": 3,
+    "health": 4,
+    "movement": 0,
+    "type": "Types.ground"
+  },
+  {
+    "name": "Moloch",
+    "description": "Moloch is named after the first city he razed.",
+    "cost": 6,
+    "damage": 7,
+    "health": 12,
+    "movement": 1,
+    "type": "Types.ground"
+  },
+  {
+    "name": "Skyfire Drake",
+    "description": "The first of a brood to ignite torches the rest.",
+    "cost": 4,
+    "damage": 4,
+    "health": 4,
+    "movement": 3,
+    "type": "Types.flying"
+  },
+  {
+    "name": "Sun Reaver",
+    "description": "Their warped minds know only the flame.",
+    "cost": 4,
+    "damage": 6,
+    "health": 6,
+    "movement": 1,
+    "type": "Types.ground"
+  },
+  {
+    "name": "Vulcan",
+    "description": "Born from the unholy sacrifice of 3 innocents.",
+    "cost": 4,
+    "damage": 3,
+    "health": 8,
+    "movement": 2,
+    "type": "Types.ground"
+  }
+]
