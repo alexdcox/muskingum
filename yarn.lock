@@ -2455,8 +2455,8 @@
   dependencies:
     "vue" "^3.2.37"
 
-"client2@file:/Users/adc/Documents/untitled-game/js/packages/client2":
-  "resolved" "file:packages/client2"
+"client@file:/Users/adc/Documents/untitled-game/js/packages/client":
+  "resolved" "file:packages/client"
   "version" "0.0.0"
   dependencies:
     "engine" "../engine"

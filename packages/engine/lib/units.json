@@ -2,7 +2,7 @@
     {
         "name": "Summoner",
         "description": "In the midst of chaos, there is opportunity.",
-        "cost": 1,
+        "cost": 0,
         "damage": 3,
         "health": 10,
         "movement": 1,

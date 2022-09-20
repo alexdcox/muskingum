@@ -13,11 +13,10 @@ import {
   UnitMap,
   Units
 } from "engine"
-import {Colors, Tile} from "../util"
-import {PropType, Ref, ref} from "vue"
-import SwordSvg from './sword.vue'
-import HeartSvg from './heart.vue'
-import ShoeSvg from './shoe.vue'
+import {Colors, makeGrid, Tile} from "../util"
+import {Ref, ref} from "vue"
+import HexTile from './HexTile.vue'
+import UnitCost from './UnitCost.vue'
 import {EventEmitter} from "events"
 
 interface Props {
@@ -56,61 +55,9 @@ props.events.on('gamestate', (state: GameState) => {
   redraw()
 })
 
-const layout = new Layout(Orientation.flat, {width: 50, height: 50}, {x: 0, y: 0})
+const layout = new Layout(Orientation.pointy, {width: 40, height:36}, {x: 0, y: 0})
 
-function makeGrid(layout: Layout, minCol: number, maxCol: number, minRow: number, maxRow: number): Tile[] {
-  let results = [];
-  let q = 0
-  let r = 0
-  let f = 0 // counter to protect against infinite loops
-  while (true) {
-    f++
-    if (props.player == 1) {
-      // player 1
-      if (q > maxCol - 1) {
-        q = 0
-        r++
-      }
-      if (r > maxRow - 1) {
-        break
-      }
-    } else {
-      // player 2
-      if (q < -(maxCol - 1)) {
-        q = 0
-        r -= 2
-        if (r > maxRow - 1) {
-          break
-        }
-      }
-    }
-    if (f > 200) {
-      break
-    }
-    const hex = Hex.axial(q, r)
-    const pos = layout.hexToPixel(hex)
-    const coord = DoubledCoord.qdoubledFromCube(hex)
-    const tile: Tile = {
-      hex,
-      coord,
-      pos,
-      points: layout.polygonCorners(hex).map((p: Point) => [p.x, p.y].join(',')).join(' '),
-      translate: `translate(${pos.x},${pos.y})`,
-    }
-    results.push(tile);
-    if (props.player == 1) {
-      // player 1
-      q++
-    } else {
-      // player 2
-      q--
-      r++
-    }
-  }
-  return results;
-}
-
-let emptyGrid = makeGrid(layout, 0, 3, 0, 8)
+let emptyGrid = makeGrid(layout, 0, 4, 0, 12)
 let highlight = ref({}) as Ref<Tile>
 
 const padding = 5
@@ -190,60 +137,18 @@ redraw()
 
 <template>
   <svg class="draw" :viewBox="viewBox">
-    <g v-for="(tile, index) in grid" :class="{hasBeenDrawn: tile.hasBeenDrawn}">
-      <defs>
-        <template v-if="tile?.image">
-          <pattern :id="tile?.unit?.fileName" height="100%" width="100%" patternContentUnits="objectBoundingBox">
-            <image
-                height="1"
-                width="1"
-                preserveAspectRatio="none"
-                :href="tile?.image"/>
-          </pattern>
-        </template>
-      </defs>
-      <polygon
-          :style="tile.style"
-          :points="tile.points"
-          :class="{hex: true, highlight: tile.hex.equals(highlight.hex)}">
-      </polygon>
-      <text :transform="tile.translate">{{ index }} ({{ tile.coord.col }},{{ tile.coord.row }})</text>
-      <template v-if="tile.unit">
-        <g class="unit-info">
-          <g :transform="tile.translate">
-            <g class="damage">
-              <SwordSvg x="0" y="0" width="14px"/>
-            </g>
-            <g class="health">
-              <HeartSvg x="0" y="0" width="14px"/>
-            </g>
-            <g class="movement">
-              <ShoeSvg x="0" y="0" width="14px"/>
-            </g>
-            <text class="name">{{ tile.unit.name }}</text>
-            <text class="damage">{{ tile.unit.damage }}</text>
-            <text class="health">{{ tile.unit.health }}</text>
-            <text class="movement">{{ tile.unit.movement }}</text>
-          </g>
-        </g>
-      </template>
+    <g v-for="(tile, k) in grid" :class="{hasBeenDrawn: tile.hasBeenDrawn}">
+      <HexTile :k="k" :tile="tile"/>
     </g>
-    <g v-for="(tile) in grid">
-      <template v-if="tile.unit">
-        <g :transform="tile.translate">
-          <g v-if="tile.unit.cost" transform="translate(24,-41)" class="cost" :class="{cost: true, hasBeenDrawn: tile.hasBeenDrawn}">
-            <circle :style="{stroke: tile?.style?.stroke, fill: tile?.style?.darkStroke}" r="9px"></circle>
-            <text>{{ tile.unit.cost }}</text>
-          </g>
-        </g>
-      </template>
+    <g v-for="(tile, k) in grid">
+      <UnitCost :k="k" :tile="tile"/>
     </g>
   </svg>
 </template>
 
 <style scoped>
 svg.draw {
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  /*height: 100%;*/
 }
 
 text {
@@ -252,94 +157,6 @@ text {
   fill: rgba(0, 0, 0, 0.9);
   pointer-events: none;
   font-family: "Permanent Marker", sans-serif;
-}
-
-text.mouseover {
-  fill: white;
-  font-family: "consolas", sans-serif;
-  font-size: 8px;
-}
-
-text.q {
-  transform: translate(0, -30px);
-}
-
-text.r {
-  transform: translate(25px, 25px);
-}
-
-text.s {
-  transform: translate(-25px, 25px);
-}
-
-polygon.highlight {
-  opacity: 0.9;
-}
-
-polygon.hex {
-  stroke-width: 3px
-}
-
-.unit-info {
-  opacity: 0.7;
-}
-
-.unit-info text {
-  stroke-width: 9px;
-  paint-order: stroke fill;
-}
-
-.unit-info text.name {
-  /*transform: translate(0, -15px);*/
-  fill: white;
-  stroke: black;
-}
-
-.unit-info text.damage {
-  transform: translate(-18px, 33px);
-  fill: black;
-  stroke: white;
-}
-
-.unit-info text.health {
-  transform: translate(1px, 33px);
-  fill: black;
-  stroke: white;
-}
-
-.unit-info text.movement {
-  transform: translate(20px, 33px);
-  fill: black;
-  stroke: white;
-}
-
-.unit-info g.damage {
-  transform: translate(-24px, -384px);
-  fill: white;
-}
-
-.unit-info g.health {
-  transform: translate(-5px, -384px);
-  fill: white;
-}
-
-.unit-info g.movement {
-  transform: translate(13px, -384px);
-  fill: white;
-}
-
-.cost circle {
-  stroke-width: 2px;
-}
-
-.cost text {
-  fill: white;
-  transform: translate(0px, 4px);
-}
-
-.remainingHealth text {
-  transform: translate(0px, 3px);
-  fill: white;
 }
 
 .hasBeenDrawn {

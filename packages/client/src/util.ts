@@ -1,4 +1,4 @@
-import {DoubledCoord, Hex, Layout, Point, Unit, UnitState} from "engine"
+import {DoubledCoord, Hex, Layout, Orientation, Point, Unit, UnitState} from "engine"
 
 export interface Tile {
   hex: Hex,
@@ -10,9 +10,12 @@ export interface Tile {
   unitState?: UnitState
   image?: string
   style?: any
+  class?: object|string
 }
 
 export const Colors = {
+  tileFill: 'hsl(56,42%,84%)',
+  tileStroke: '#242424',
   purple: 'hsl(300,72%,67%)',
   darkPurple: 'hsl(300,35%,30%)',
   green: 'hsl(88,69%,64%)',
@@ -37,7 +40,7 @@ export function makeGrid(layout: Layout, minCol: number, maxCol: number, minRow:
       if (row % 2 == 0 && col % 2 != 0) continue
       if (col % 2 == 0 && row % 2 != 0) continue
       const coord = new DoubledCoord(col, row)
-      const hex = coord.qdoubledToCube()
+      const hex = layout.orientation == Orientation.pointy ? coord.rdoubledToCube() : coord.qdoubledToCube()
       const pos = layout.hexToPixel(hex)
       const tile: Tile = {
         hex,

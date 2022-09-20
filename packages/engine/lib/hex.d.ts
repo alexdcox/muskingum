@@ -43,6 +43,7 @@ export declare class DoubledCoord {
     col: number;
     row: number;
     constructor(col: number, row: number);
+    toString(): string;
     equals(o: DoubledCoord): boolean;
     static qdoubledFromCube(h: Hex): DoubledCoord;
     qdoubledToCube(): Hex;

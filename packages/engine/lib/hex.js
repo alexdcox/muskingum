@@ -163,6 +163,9 @@ export class DoubledCoord {
         this.col = col;
         this.row = row;
     }
+    toString() {
+        return `${this.col},${this.row}`;
+    }
     equals(o) {
         if (o === undefined) {
             return false;

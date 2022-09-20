@@ -9,9 +9,9 @@ declare module "ws" {
         player: number;
     }
 }
+export declare const EnergyCoords: [DoubledCoord, number][];
 declare class Connection {
     socket: WebSocket;
-    player: number;
     constructor(socket: WebSocket);
 }
 export declare class GameServer {
@@ -23,7 +23,7 @@ export declare class GameServer {
     startGame(): void;
 }
 export interface TurnState {
-    summoned?: UnitState;
+    summoned: UnitState[];
     player: number;
     stage: TurnStage;
     unitsMoved: DoubledCoord[];

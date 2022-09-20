@@ -10,17 +10,16 @@ declare module "ws" {
   }
 }
 
-const energyCoords: [DoubledCoord, number][] = [
-  [new DoubledCoord(2, 2), 1],
-  [new DoubledCoord(2, 6), 1],
-  [new DoubledCoord(6, 2), 1],
-  [new DoubledCoord(6, 6), 1],
-  [new DoubledCoord(4, 4), 2],
+export const EnergyCoords: [DoubledCoord, number][] = [
+  [new DoubledCoord(3, 1), 1],
+  [new DoubledCoord(3, 3), 1],
+  [new DoubledCoord(9, 1), 1],
+  [new DoubledCoord(9, 3), 1],
+  [new DoubledCoord(6, 2), 2],
 ]
 
 class Connection {
   public socket: WebSocket
-  public player: number
 
   constructor(socket: WebSocket) {
     this.socket = socket
@@ -45,7 +44,6 @@ export class GameServer {
     }
     const connection = new Connection(socket)
     connection.socket.player = this.connections.length + 1
-    connection.player = this.connections.length
     this.connections.push(connection)
     console.log('New websocket connection from player', this.connections.length)
     socket.send(JSON.stringify({type: 'playerid', id: this.connections.length}))
@@ -123,7 +121,7 @@ class Zone {
 }
 
 export interface TurnState {
-  summoned?: UnitState
+  summoned: UnitState[]
   player: number
   stage: TurnStage
   unitsMoved: DoubledCoord[]
@@ -139,7 +137,8 @@ export class Game {
     player: 0,
     stage: TurnStage.Summon,
     unitsMoved: [],
-    unitsAttacked: []
+    unitsAttacked: [],
+    summoned: [],
   }
 
   constructor() {
@@ -167,12 +166,12 @@ export class Game {
     this.boardUnits.push({
       id: UnitId.Summoner,
       player: 1,
-      coord: new DoubledCoord(0, 4)
+      coord: new DoubledCoord(0, 2)
     })
     this.boardUnits.push({
       id: UnitId.Summoner,
       player: 2,
-      coord: new DoubledCoord(8, 4)
+      coord: new DoubledCoord(12, 2)
     })
 
     this.emitGameState()
@@ -206,7 +205,7 @@ export class Game {
     }
 
     this.turn.stage = TurnStage.Summon
-    this.turn.summoned = undefined
+    this.turn.summoned = []
     this.turn.unitsMoved = []
     this.turn.unitsAttacked = []
 
@@ -225,7 +224,7 @@ export class Game {
     for (let playerIndex = 0; playerIndex < this.players.length; playerIndex++) {
       const state = this.playerState[playerIndex]
       let energyGain = 1
-      for (const [coord, energy] of energyCoords) {
+      for (const [coord, energy] of EnergyCoords) {
         for (const unit of this.boardUnits) {
           if (unit.player != Number(playerIndex) + 1) {
             continue
@@ -240,27 +239,27 @@ export class Game {
   }
 
   summon(unitId: UnitId, coord: DoubledCoord) {
-    console.log('Player', this.turn.player, 'attempting to summon', unitId, 'to', coord)
+    const playerIndex = this.turn.player - 1
+    const playerNum = this.turn.player
+    const playerState = this.playerState[playerIndex]
+    const unit = UnitId.unit(unitId)
+    console.log(`Player ${playerNum} summoning ${unit.name} to ${coord.toString()}`)
     const unitState = {
       id: unitId,
       coord,
       player: this.turn.player,
     }
-    const playerIndex = this.turn.player - 1
-    const playerNum = this.turn.player
-    const playerState = this.playerState[playerIndex]
-    const unit = UnitId.unit(unitId)
     if (playerState.energy < unit.cost) {
-      console.log('not enough muhlah for that, nice try')
+      console.log(`Not enough muhlah to summon ${unit.name} have ${playerState.energy}/${unit.cost}, nice try`)
       return
     }
     playerState.energy -= unit.cost
     const summoner = this.boardUnits.find(unit => unit.player == playerNum && unit.id == UnitId.Summoner)!
-    if (coord.qdoubledToCube().distance(summoner.coord.qdoubledToCube()) != 1) {
-      console.log('cannae summon there ya nonse')
+    if (coord.rdoubledToCube().distance(summoner.coord.rdoubledToCube()) != 1) {
+      console.log('Cannae summon there ya nonse')
       return
     }
-    this.turn.summoned = unitState
+    this.turn.summoned.push(unitState)
     this.boardUnits.push(unitState)
     playerState.hand.removeUnit(unitId)
     // TODO: do we draw now or at the end of the summon turn?
@@ -284,12 +283,19 @@ export class Game {
     console.log('Player', this.turn.player, 'attempting to move from', from, 'to', to)
     const unitState = this.boardUnits.find(unit => unit.coord.equals(from))!
     if (!unitState) {
-      console.log('no unit')
+      console.log('No unit')
       return
     }
     const unit = UnitId.unit(unitState.id)
-    const distance = from.qdoubledToCube().distance(to.qdoubledToCube())
-    if (this.turn.summoned?.coord.equals(from)) {
+    const distance = from.rdoubledToCube().distance(to.rdoubledToCube())
+    let hasSummoningSickness = false
+    for (const summoned of this.turn.summoned) {
+      if (summoned.coord.equals(from)) {
+        hasSummoningSickness = true
+        break
+      }
+    }
+    if (hasSummoningSickness) {
       console.log('Them theres got the summoning sickness')
       return
     }
@@ -310,7 +316,7 @@ export class Game {
     unitState.coord = to
     this.turn.unitsMoved.push(to)
     let unitCount = this.boardUnits.filter(unit => unit.player == this.turn.player).length
-    if (this.turn.summoned) {
+    if (this.turn.summoned.length) {
       unitCount--
     }
     if (this.turn.unitsMoved.length == unitCount) {
@@ -334,7 +340,14 @@ export class Game {
   attack(from: DoubledCoord, to: DoubledCoord) {
     const playerNum = this.turn.player
     console.log('Player', playerNum, 'attacking from', from, 'to', to)
-    if (this.turn.summoned?.coord.equals(from)) {
+    let hasSummoningSickness = false
+    for (const summoned of this.turn.summoned) {
+      if (summoned.coord.equals(from)) {
+        hasSummoningSickness = true
+        break
+      }
+    }
+    if (hasSummoningSickness) {
       console.log('Them theres got the summoning sickness')
       return
     }

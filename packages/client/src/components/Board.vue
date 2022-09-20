@@ -1,10 +1,22 @@
 <script setup lang="ts">
-import {DoubledCoord, GameState, hexSetBounds, Layout, Orientation, TurnStage, Unit, UnitId, UnitMap} from "engine"
+import {
+  EnergyCoords,
+  DoubledCoord,
+  GameState,
+  hexSetBounds,
+  Layout,
+  Orientation,
+  TurnStage,
+  Unit,
+  UnitId,
+  UnitMap,
+  Hex
+} from "engine"
 import {Colors, makeGrid, Tile} from "../util"
 import {ref, Ref} from "vue"
-import SwordSvg from './sword.vue'
-import HeartSvg from './heart.vue'
-import ShoeSvg from './shoe.vue'
+import HexTile from './HexTile.vue'
+import PlainHexTile from './PlainHexTile.vue'
+import UnitCost from './UnitCost.vue'
 import {EventEmitter} from "events"
 
 interface Props {
@@ -20,17 +32,26 @@ const options = {
   showDoubleCoords: false,
 }
 
-const padding = 15
-const layout = new Layout(Orientation.flat, {width: 50, height: 50}, {x: 0, y: 0})
+const padding = 5
+const layout = new Layout(Orientation.pointy, {width: 40, height: 36}, {x: 0, y: 0})
 
 let state = ref({}) as Ref<GameState>
 let currentPlayer = ref(0)
 let highlight = ref({}) as Ref<Tile>
-let selected = ref({}) as Ref<Tile|undefined>
-let emptyGrid = makeGrid(layout, 0, 9, 0, 9)
-const summonUnit = ref(undefined) as Ref<Unit|undefined>
-const moveFrom = ref(undefined) as Ref<DoubledCoord|undefined>
-const attackFrom = ref(undefined) as Ref<DoubledCoord|undefined>
+let selected = ref({}) as Ref<Tile | undefined>
+let emptyGrid = makeGrid(layout, 0, 13, 0, 5)
+    .filter(tile => {
+      const omit = [[0, 0], [12, 0], [0, 4], [12, 4]]
+      for (const [col, row] of omit) {
+        if (tile.coord.col == col && tile.coord.row == row) {
+          return false
+        }
+      }
+      return true
+    })
+const summonUnit = ref(undefined) as Ref<Unit | undefined>
+const moveFrom = ref(undefined) as Ref<DoubledCoord | undefined>
+const attackFrom = ref(undefined) as Ref<DoubledCoord | undefined>
 
 const viewBox = (() => {
   let {left, top, right, bottom} = hexSetBounds(layout, emptyGrid.map(t => t.hex))
@@ -117,13 +138,10 @@ const withPlayerUnits = (tiles: Tile[]): Tile[] => {
 }
 
 const withStyles = (tiles: Tile[]): Tile[] => {
+  const nonStyled: Tile[] = []
   const styled: Tile[] = []
   for (const tile of tiles) {
-    let style: any = {
-      stroke: 'white',
-      darkStroke: 'black',
-      fill: Colors.white,
-    }
+    let style: any = {}
 
     if (tile.unit) {
       style.fill = `url(#${tile?.unit?.fileName})`
@@ -146,9 +164,13 @@ const withStyles = (tiles: Tile[]): Tile[] => {
       style.darkStroke = "darkgreen"
     }
 
-    styled.push({...tile, style})
+    if (Object.keys(style).length === 0) {
+      nonStyled.push(tile)
+    } else {
+      styled.push({...tile, style})
+    }
   }
-  return styled
+  return [...nonStyled, ...styled]
 }
 
 const withPlayerTilesSortedLast = (tiles: Tile[]): Tile[] => {
@@ -163,14 +185,14 @@ const withPlayerTilesSortedLast = (tiles: Tile[]): Tile[] => {
 
 let grid = ref(emptyGrid)
 
-const withSummonHighlight  = (tiles: Tile[]): Tile[] => {
+const withSummonHighlight = (tiles: Tile[]): Tile[] => {
   if (!summonUnit.value) {
     return tiles
   }
 
   const summonerTile = tiles.find(tile => tile.unitState?.player == currentPlayer.value && tile.unit?.id == UnitId.Summoner)!
   const summonerCoords = summonerTile.coord
-  const summonerHex = summonerCoords.qdoubledToCube()
+  const summonerHex = summonerCoords.rdoubledToCube()
 
   const processedTop: Tile[] = []
   const processedBottom: Tile[] = []
@@ -179,11 +201,15 @@ const withSummonHighlight  = (tiles: Tile[]): Tile[] => {
     if (tile.hex.distance(summonerHex) == 0) {
       processedTop.push({...tile})
     } else if (tile.hex.distance(summonerHex) == 1) {
-      processedTop.push({...tile, style: {
+      processedTop.push({
+        ...tile, style: {
           stroke: Colors.summonHighlightStroke,
           fill: Colors.summonHighlightFill,
           cursor: 'pointer',
-        }})
+        }
+      })
+      // TODO: Transition to class based animation
+      // processedTop.push({...tile, class: {summoning: true}})
     } else {
       processedBottom.push({...tile})
     }
@@ -192,7 +218,7 @@ const withSummonHighlight  = (tiles: Tile[]): Tile[] => {
   return [...processedBottom, ...processedTop]
 }
 
-const withMoveHighlight  = (tiles: Tile[]): Tile[] => {
+const withMoveHighlight = (tiles: Tile[]): Tile[] => {
   if (state.value?.turn?.stage != TurnStage.Move) {
     return tiles
   }
@@ -217,11 +243,13 @@ const withMoveHighlight  = (tiles: Tile[]): Tile[] => {
       } else if (tile.unit) {
         processedTop.push({...tile})
       } else if (tileDistance > 0 && tileDistance <= unitMovement) {
-        processedTop.push({...tile, style: {
+        processedTop.push({
+          ...tile, style: {
             stroke: Colors.moveHighlightStroke,
             fill: Colors.moveHighlightFill,
             cursor: 'pointer',
-          }})
+          }
+        })
       } else {
         processedBottom.push({...tile})
       }
@@ -250,7 +278,7 @@ const withMoveHighlight  = (tiles: Tile[]): Tile[] => {
   return [...processedBottom, ...processedTop]
 }
 
-const withAttackHighlight  = (tiles: Tile[]): Tile[] => {
+const withAttackHighlight = (tiles: Tile[]): Tile[] => {
   if (state.value?.turn?.stage != TurnStage.Attack) {
     return tiles
   }
@@ -272,11 +300,13 @@ const withAttackHighlight  = (tiles: Tile[]): Tile[] => {
           }
         })
       } else if (tileDistance == 1 && tile.unit) {
-        processedTop.push({...tile, style: {
+        processedTop.push({
+          ...tile, style: {
             ...tile.style,
             stroke: Colors.attackHighlightStroke,
             cursor: 'pointer',
-          }})
+          }
+        })
       } else {
         processedBottom.push({...tile})
       }
@@ -304,7 +334,6 @@ const withAttackHighlight  = (tiles: Tile[]): Tile[] => {
 
   return [...processedBottom, ...processedTop]
 }
-
 
 const redraw = () => {
   let tiles = emptyGrid
@@ -337,104 +366,31 @@ props.events.on('-setsummon', (unit: Unit) => {
   redraw()
 })
 
+// TODO: clean
+const t: [DoubledCoord, number][] = EnergyCoords
+
 </script>
 
 <template>
   <svg class="board" :viewBox="viewBox">
-    <g v-for="(tile) in grid">
-      <defs>
-        <template v-if="tile.image">
-          <pattern :id="tile.unit?.fileName" height="100%" width="100%" patternContentUnits="objectBoundingBox">
-            <image
-                height="1"
-                width="1"
-                preserveAspectRatio="none"
-                :href="tile?.image"/>
-          </pattern>
-        </template>
-      </defs>
-      <polygon
-          :style="tile.style"
-          :points="tile.points"
-          @mouseover="onTileMouseover(tile)"
-          @mousedown="onTileMousedown(tile)"
-          :class="{hex: true, highlight: tile.hex.equals(highlight.hex)}">
-      </polygon>
-      <g v-if="!tile.unit">
+    <g v-for="(tile, k) in grid">
+      <PlainHexTile :k="k" :tile="tile"/>
+    </g>
+    <g v-for="(tile, k) in grid">
+      <g v-for="exy in EnergyCoords">
         <circle
-            v-if="tile.coord.row == 4 && tile.coord.col == 4"
-            r="10px"
-            fill="purple"
-            :transform="tile.translate">
-        </circle>
-        <circle
-            v-if="tile.coord.row == 2 && tile.coord.col == 2"
-            r="4px"
-            fill="green"
-            :transform="tile.translate">
-        </circle>
-        <circle
-            v-if="tile.coord.row == 2 && tile.coord.col == 6"
-            r="4px"
-            fill="green"
-            :transform="tile.translate">
-        </circle>
-        <circle
-            v-if="tile.coord.row == 6 && tile.coord.col == 6"
-            r="4px"
-            fill="green"
-            :transform="tile.translate">
-        </circle>
-        <circle
-            v-if="tile.coord.row == 6 && tile.coord.col == 2"
-            r="4px"
-            fill="green"
+            v-if="tile.coord.col === exy[0].col && tile.coord.row === exy[0].row"
+            :r="exy[1] === 2 ? '8px' : '5px'"
+            :fill="exy[1] === 2 ? 'purple' : 'green'"
             :transform="tile.translate">
         </circle>
       </g>
-      <template v-if="tile.unit">
-        <g class="unit-info">
-          <g :transform="tile.translate">
-            <g class="damage">
-              <SwordSvg x="0" y="0" width="14px"/>
-            </g>
-            <g class="health">
-              <HeartSvg x="0" y="0" width="14px"/>
-            </g>
-            <g class="movement">
-              <ShoeSvg x="0" y="0" width="14px"/>
-            </g>
-            <text class="name">{{ tile.unit.name }}</text>
-            <text class="damage">{{ tile.unit.damage }}</text>
-            <text class="health">{{ tile.unit.health }}</text>
-            <text class="movement">{{ tile.unit.movement }}</text>
-            <template v-if="options.showQRSCoords">
-              <text class="q">{{ tile.hex.q }}</text>
-              <text class="r">{{ tile.hex.r }}</text>
-              <text class="s">{{ tile.hex.s }}</text>
-            </template>
-            <template v-if="options.showDoubleCoords">
-              <text :transform="tile.translate">{{ tile.coord.col }},
-                {{ tile.coord.row }}
-              </text>
-            </template>
-          </g>
-        </g>
-      </template>
     </g>
-    <g v-for="(tile) in grid">
-      <template v-if="tile.unit">
-        <g :transform="tile.translate">
-          <g v-if="tile.unit.cost" transform="translate(24,-41)" class="cost">
-            <circle :style="{stroke: tile.style?.stroke, fill: tile.style?.darkStroke}" r="9px"></circle>
-            <text>{{tile.unit.cost}}</text>
-          </g>
-          <g v-if="tile.unitState?.remainingHealth" transform="translate(0,30)" class="remainingHealth">
-            <circle :style="{stroke: tile.style?.stroke, fill: tile.style?.darkStroke}" r="9px"></circle>
-            <text>{{tile.unitState.remainingHealth}}</text>
-          </g>
-        </g>
-      </template>
+    <g v-for="(tile, k) in grid">
+      <HexTile :k="k" :tile="tile" :mouseover="onTileMouseover" :mousedown="onTileMousedown"/>
+    </g>
+    <g v-for="(tile, k) in grid">
+      <UnitCost :k="k" :tile="tile"/>
     </g>
   </svg>
 
@@ -442,8 +398,9 @@ props.events.on('-setsummon', (unit: Unit) => {
 
 
 <style scoped>
-svg.board{
-  height: 100%;
+
+svg.board {
+  transform: perspective(1100px) rotateX(15deg);
   margin: 0 auto;
 }
 
@@ -452,7 +409,7 @@ text {
   font-size: 0.6em;
   fill: rgba(0, 0, 0, 0.9);
   pointer-events: none;
-  font-family: "Permanent Marker",sans-serif;
+  font-family: "Permanent Marker", sans-serif;
 }
 
 text.mouseover {
@@ -460,90 +417,4 @@ text.mouseover {
   font-family: "consolas", sans-serif;
   font-size: 8px;
 }
-
-text.q {
-  transform: translate(0, -30px);
-}
-
-text.r {
-  transform: translate(25px, 25px);
-}
-
-text.s {
-  transform: translate(-25px, 25px);
-}
-
-polygon.highlight {
-  opacity: 0.9;
-}
-
-polygon.hex {
-  stroke-width: 3px
-}
-
-.selectable {
-
-}
-
-.unit-info {
-  opacity: 0.7;
-}
-
-.unit-info text {
-  stroke-width: 9px;
-  paint-order: stroke fill;
-}
-
-.unit-info text.name {
-  fill: white;
-  stroke: black;
-}
-
-.unit-info text.damage {
-  transform: translate(-18px, 33px);
-  fill: black;
-  stroke: white;
-}
-
-.unit-info g.damage {
-  transform: translate(-24px, -226px);
-  fill: white;
-}
-
-.unit-info text.health {
-  transform: translate(1px, 33px);
-  fill: black;
-  stroke: white;
-}
-
-.unit-info g.health {
-  transform: translate(-5px, -226px);
-  fill: white;
-}
-
-.unit-info text.movement {
-  transform: translate(20px, 33px);
-  fill: black;
-  stroke: white;
-}
-
-.unit-info g.movement {
-  transform: translate(13px, -226px);
-  fill: white;
-}
-
-.cost circle {
-  stroke-width: 2px;
-}
-
-.cost text {
-  fill: white;
-  transform: translate(0px, 4px);
-}
-
-.remainingHealth text {
-  transform: translate(0px, 3px);
-  fill: white;
-}
-
 </style>

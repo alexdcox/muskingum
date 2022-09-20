@@ -193,6 +193,10 @@ export class DoubledCoord {
     this.row = row;
   }
 
+  toString() {
+    return `${this.col},${this.row}`
+  }
+
   equals(o: DoubledCoord) {
     if (o === undefined) {
       return false
