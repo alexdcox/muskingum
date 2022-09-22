@@ -2,15 +2,27 @@ import {DoubledCoord, Hex, Layout, Orientation, Point, Unit, UnitState} from "en
 
 export interface Tile {
   hex: Hex,
-  points: string
+  points: Point[]
   pos: Point
   translate: string
   coord: DoubledCoord
   unit?: Unit
   unitState?: UnitState
   image?: string
-  style?: any
-  class?: object|string
+  style: any
+  // style: {
+  //   fill?: string
+  // }
+  classes: any
+/*
+  classes: {
+    selected: boolean
+    highlighted: boolean
+    summoning: boolean
+    p1: boolean
+    p2: boolean
+  }
+*/
 }
 
 export const Colors = {
@@ -29,14 +41,14 @@ export const Colors = {
   moveHighlightStroke: 'rgb(45,229,70)',
   moveHighlightFill: 'rgb(25,128,46)',
   summonHighlightStroke: 'rgb(45,229,229)',
-  summonHighlightFill: 'rgb(25,128,128)',
+  summonHighlightFill: 'hsl(181, 44%, 52%)',
   attackHighlightStroke: 'rgb(229,155,45)'
 }
 
 export function makeGrid(layout: Layout, minCol: number, maxCol: number, minRow: number, maxRow: number): Tile[] {
   let results = [];
-  for (let col = minCol; col <= maxCol - 1; col++) {
-    for (let row = minRow; row <= maxRow - 1; row++) {
+  for (let row = minRow; row <= maxRow - 1; row++) {
+    for (let col = minCol; col <= maxCol - 1; col++) {
       if (row % 2 == 0 && col % 2 != 0) continue
       if (col % 2 == 0 && row % 2 != 0) continue
       const coord = new DoubledCoord(col, row)
@@ -46,8 +58,12 @@ export function makeGrid(layout: Layout, minCol: number, maxCol: number, minRow:
         hex,
         coord,
         pos,
-        points: layout.polygonCorners(hex).map((p: Point) => [p.x, p.y].join(',')).join(' '),
+        points: layout.polygonCorners(hex),
         translate: `translate(${pos.x},${pos.y})`,
+        style: {},
+        classes: {
+          selected: false,
+        },
       }
       results.push(tile);
     }

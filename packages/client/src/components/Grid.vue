@@ -116,8 +116,8 @@ const realConnection = () => {
   return window.game.ws
 }
 
-realConnection()
-// fakeConnection()
+// realConnection()
+fakeConnection()
 
 events.on('playerid', (id) => {
   playerId.value = id
@@ -171,45 +171,47 @@ const getStageName = (state: GameState) => {
 
 <template>
   <div class="game">
-    <div class="info">
-      col: {{ highlight?.coord?.col }} row: {{ highlight?.coord?.row }}
-      &nbsp;
-      <template v-if="playerId > 0">
-        <span>You are player {{ playerId }}.</span>
-        &nbsp;
-        <span>You have {{
-            state?.players?.[playerId - 1].energy
-          }} energy (+{{ state?.players?.[playerId - 1].energyGain }} per turn)</span>
-        &nbsp;
-        <span>It's player {{ state?.turn?.player }}s go to {{ getStageName(state) }}.</span>
-      </template>
-    </div>
+<!--    <div class="info">-->
+<!--      col: {{ highlight?.coord?.col }} row: {{ highlight?.coord?.row }}-->
+<!--      &nbsp;-->
+<!--      <template v-if="playerId > 0">-->
+<!--        <span>You are player {{ playerId }}.</span>-->
+<!--        &nbsp;-->
+<!--        <span>You have {{-->
+<!--            state?.players?.[playerId - 1].energy-->
+<!--          }} energy (+{{ state?.players?.[playerId - 1].energyGain }} per turn)</span>-->
+<!--        &nbsp;-->
+<!--        <span>It's player {{ state?.turn?.player }}s go to {{ getStageName(state) }}.</span>-->
+<!--      </template>-->
+<!--    </div>-->
 
-    <div class="draw1">
-      <Draw :events="events" :player="1"/>
-    </div>
+<!--    <div class="draw1">-->
+<!--      <Draw :events="events" :player="1"/>-->
+<!--    </div>-->
 
-    <div class="draw2">
-      <Draw :events="events" :player="2"/>
-    </div>
+<!--    <div class="draw2">-->
+<!--      <Draw :events="events" :player="2"/>-->
+<!--    </div>-->
 
-    <div class="board">
-      <Board :events="events" :on-tile-mouseover="onTileMouseover"></Board>
-    </div>
+<!--    <div class="board">-->
+<!--      <Board :events="events" :on-tile-mouseover="onTileMouseover"></Board>-->
+<!--    </div>-->
 
-    <div class="hands">
-      <div class="p1">
-        <Hand :events="events" :player="1"/>
-      </div>
-      <div class="controls">
-        <button @mousedown="skip(state)">Skip</button>
-        <button @mousedown="skip(state)">Undo</button>
-        <button @mousedown="skip(state)">Resign</button>
-      </div>
-      <div class="p2">
-        <Hand :events="events" :player="2"/>
-      </div>
-    </div>
+<!--    <div class="hands">-->
+<!--      <div class="p1">-->
+<!--        <Hand :events="events" :player="1"/>-->
+<!--      </div>-->
+<!--      <div class="controls">-->
+<!--        <button @mousedown="skip(state)">Skip</button>-->
+<!--        <button @mousedown="skip(state)">Undo</button>-->
+<!--        <button @mousedown="skip(state)">Resign</button>-->
+<!--      </div>-->
+<!--      <div class="p2">-->
+<!--        <Hand :events="events" :player="2"/>-->
+<!--      </div>-->
+<!--    </div>-->
+
+    <CanvasAttempt/>
 
     <div class="draw"></div>
 

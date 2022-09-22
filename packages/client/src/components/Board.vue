@@ -19,13 +19,11 @@ import PlainHexTile from './PlainHexTile.vue'
 import UnitCost from './UnitCost.vue'
 import {EventEmitter} from "events"
 
-interface Props {
+const props = defineProps<{
   events: EventEmitter,
   onTileMouseover?: (tile: Tile) => void
   onTileMousedown?: (tile: Tile) => void
-}
-
-const props = defineProps<Props>()
+}>()
 
 const options = {
   showQRSCoords: false,
@@ -67,12 +65,16 @@ const getUnitImage = (unit: Unit) => {
 }
 
 const onTileMouseover = (tile: Tile) => {
-  highlight.value = tile
   props.onTileMouseover?.(tile)
-  redraw()
+  highlight.value = tile
+  // redraw()
 }
 
 const onTileMousedown = (tile: Tile) => {
+  console.log('ON TILE MOUSEDPOEN BOARD')
+
+  props.onTileMousedown?.(tile)
+
   if (summonUnit.value) {
     props.events.emit('-summon', {unitId: summonUnit.value.id, coord: tile.coord})
     return
@@ -106,11 +108,11 @@ const onTileMousedown = (tile: Tile) => {
     return
   }
 
-  // if (selected.value && selected.value?.coord?.equals(tile.coord)) {
-  //   selected.value = undefined
-  // } else {
-  //   selected.value = tile
-  // }
+  if (selected.value?.classes?.selected === true) {
+    selected.value.classes.selected = false
+  }
+  tile.classes.selected = true
+  selected.value = tile
 
   // state.units.push({
   //   id: UnitId.Emberstrike,
@@ -119,68 +121,69 @@ const onTileMousedown = (tile: Tile) => {
   // })
 
   redraw()
-  props.onTileMousedown?.(tile)
 }
 
 const withPlayerUnits = (tiles: Tile[]): Tile[] => {
-  const withUnits: Tile[] = []
   for (const tile of tiles) {
-    const p = {...tile}
+    tile.unitState = undefined
+    tile.unit = undefined
+    tile.image = undefined
     const unitState = state.value.units?.find(u => u.coord.equals(tile.coord))
     if (unitState) {
-      p.unitState = unitState
-      p.unit = UnitMap.get(unitState.id)
-      p.image = getUnitImage(p.unit!)
+      tile.unitState = unitState
+      tile.unit = UnitMap.get(unitState.id)
+      tile.image = getUnitImage(tile.unit!)
     }
-    withUnits.push(p)
   }
-  return withUnits
+  return tiles
 }
 
 const withStyles = (tiles: Tile[]): Tile[] => {
-  const nonStyled: Tile[] = []
-  const styled: Tile[] = []
+  // const ret: Tile[] = []
   for (const tile of tiles) {
-    let style: any = {}
+    // tile.classes.selected = true
 
-    if (tile.unit) {
-      style.fill = `url(#${tile?.unit?.fileName})`
+    // let style: any = {
+    //   image: undefined,
+    // }
+
+    let classes: any = {
+      p1: false,
+      p2: false,
+      selected: false,
+      highlighted: false,
+      summoning: false,
     }
 
-    switch (tile?.unitState?.player) {
-      case 1:
-        style.stroke = "red"
-        style.darkStroke = '#490000'
-        break
-      case 2:
-        style.stroke = "blue"
-        style.darkStroke = "#000099"
-        break
+    if (tile.unit) {
+      tile.style.fill = `url(#${tile?.unit?.fileName})`
+    }
+
+    if (tile?.unitState?.player) {
+      tile.classes[`p${tile.unitState.player}`] = true
     }
 
     if (selected?.value?.coord?.equals(tile.coord)) {
-      style.stroke = "green"
-      style.fill = "darkgreen"
-      style.darkStroke = "darkgreen"
+      // style.stroke = "green"
+      // style.fill = "darkgreen"
+      // style.darkStroke = "darkgreen"
+      classes.selected = true
+      // tile.classes = {selected: true}
     }
 
-    if (Object.keys(style).length === 0) {
-      nonStyled.push(tile)
-    } else {
-      styled.push({...tile, style})
-    }
-  }
-  return [...nonStyled, ...styled]
-}
+    tile.classes = classes
 
-const withPlayerTilesSortedLast = (tiles: Tile[]): Tile[] => {
-  const player = []
-  const nonPlayer = []
-  for (const tile of tiles) {
-    if (tile?.unitState?.player) player.push(tile)
-    else nonPlayer.push(tile)
+    // Object.assign(tile.style, style)
+    // Object.assign(tile.classes, classes)
+
+    // if (Object.keys(style).length > 0 || Object.keys(classes).length > 0) {
+    //   styled.push({...tile, style, classes})
+    // }
+
+    // ret.push({...tile})
   }
-  return [...nonPlayer, ...player]
+
+  return tiles
 }
 
 let grid = ref(emptyGrid)
@@ -202,10 +205,8 @@ const withSummonHighlight = (tiles: Tile[]): Tile[] => {
       processedTop.push({...tile})
     } else if (tile.hex.distance(summonerHex) == 1) {
       processedTop.push({
-        ...tile, style: {
-          stroke: Colors.summonHighlightStroke,
-          fill: Colors.summonHighlightFill,
-          cursor: 'pointer',
+        ...tile, classes: {
+          summoning: true,
         }
       })
       // TODO: Transition to class based animation
@@ -336,13 +337,14 @@ const withAttackHighlight = (tiles: Tile[]): Tile[] => {
 }
 
 const redraw = () => {
+  console.log('redraw')
   let tiles = emptyGrid
   tiles = withPlayerUnits(tiles)
   tiles = withStyles(tiles)
-  tiles = withPlayerTilesSortedLast(tiles)
-  tiles = withSummonHighlight(tiles)
-  tiles = withMoveHighlight(tiles)
-  tiles = withAttackHighlight(tiles)
+  // tiles = withSummonHighlight(tiles)
+  // tiles = withMoveHighlight(tiles)
+  // tiles = withAttackHighlight(tiles)
+
   grid.value = tiles
 }
 
@@ -369,26 +371,51 @@ props.events.on('-setsummon', (unit: Unit) => {
 // TODO: clean
 const t: [DoubledCoord, number][] = EnergyCoords
 
+const layerTwoClasses = ['selected']
+const checkLayer = (tile: Tile, test: number): boolean => {
+  if (test === 1) {
+    return true
+  }
+  let tileLayer = 1
+  for (const l2 of layerTwoClasses) {
+    if (tile.classes[l2] === true) {
+      tileLayer = 2
+    }
+  }
+  return tileLayer === test
+}
+
 </script>
+
+
 
 <template>
   <svg class="board" :viewBox="viewBox">
+    <TransitionGroup name="list" :key="tile">
+      <g v-for="(tile, k) in grid" :key="tile">
+        <PlainHexTile layer="1" :k="k" :tile="tile" :mouseover="onTileMouseover" :mousedown="onTileMousedown"/>/>
+        <text :transform="tile.translate">l1</text>
+      </g>
+    </TransitionGroup>
     <g v-for="(tile, k) in grid">
-      <PlainHexTile :k="k" :tile="tile"/>
-    </g>
-    <g v-for="(tile, k) in grid">
-      <g v-for="exy in EnergyCoords">
-        <circle
-            v-if="tile.coord.col === exy[0].col && tile.coord.row === exy[0].row"
-            :r="exy[1] === 2 ? '8px' : '5px'"
-            :fill="exy[1] === 2 ? 'purple' : 'green'"
-            :transform="tile.translate">
-        </circle>
+      <g v-if="checkLayer(tile, 2)">
+        <PlainHexTile layer="2" :k="k" :tile="tile" :mouseover="onTileMouseover" :mousedown="onTileMousedown"/>/>
+        <text :transform="tile.translate">l2</text>
       </g>
     </g>
-    <g v-for="(tile, k) in grid">
-      <HexTile :k="k" :tile="tile" :mouseover="onTileMouseover" :mousedown="onTileMousedown"/>
-    </g>
+<!--    <g v-for="(tile, k) in grid">-->
+<!--      <g v-for="exy in EnergyCoords">-->
+<!--        <circle-->
+<!--            v-if="tile.coord.col === exy[0].col && tile.coord.row === exy[0].row"-->
+<!--            :r="exy[1] === 2 ? '8px' : '5px'"-->
+<!--            :fill="exy[1] === 2 ? 'purple' : 'green'"-->
+<!--            :transform="tile.translate">-->
+<!--        </circle>-->
+<!--      </g>-->
+<!--    </g>-->
+<!--    <g v-for="(tile, k) in grid">-->
+<!--      <HexTile :k="k" :tile="tile" :mouseover="onTileMouseover" :mousedown="onTileMousedown"/>-->
+<!--    </g>-->
     <g v-for="(tile, k) in grid">
       <UnitCost :k="k" :tile="tile"/>
     </g>
@@ -402,6 +429,7 @@ const t: [DoubledCoord, number][] = EnergyCoords
 svg.board {
   transform: perspective(1100px) rotateX(15deg);
   margin: 0 auto;
+  max-height: 100%;
 }
 
 text {
@@ -417,4 +445,14 @@ text.mouseover {
   font-family: "consolas", sans-serif;
   font-size: 8px;
 }
+
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.5s ease;
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+}
+
 </style>

@@ -11,7 +11,6 @@ const props = defineProps<{
   tile: Tile
   mouseover?: (tile: Tile) => void
   mousedown?: (tile: Tile) => void
-  summoning: boolean
 }>()
 
 const highlight = ref({}) as Ref<Tile>
@@ -40,7 +39,7 @@ const coords = `${props.k} (${props.tile.coord.col},${props.tile.coord.row})`
         :class="{
           hex: true,
           highlight: tile.hex.equals(highlight.hex),
-          ...tile.class,
+          ...tile.classes,
         }">
     </polygon>
     <text v-if="!tile.unit" class="coords" :transform="tile.translate">{{ coords }}</text>
@@ -106,10 +105,6 @@ polygon.hex {
   fill: v-bind(Colors.tileFill);
   stroke-width: 2px;
   transition: background-color 0.5s ease-in-out;
-}
-
-polygon.hex.summoning {
-  background-color: chartreuse;
 }
 
 .unit-info {
@@ -178,6 +173,16 @@ polygon.hex.summoning {
 .remainingHealth text {
   transform: translate(0px, 3px);
   fill: white;
+}
+
+.p1 {
+  stroke: red;
+  /*darkStroke: '#490000'*/
+}
+
+.p2 {
+  stroke: blue;
+  /*darkStroke: "#000099";*/
 }
 
 </style>

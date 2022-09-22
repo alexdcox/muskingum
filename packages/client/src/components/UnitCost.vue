@@ -10,7 +10,7 @@ defineProps<{
 
 <template>
   <g :transform="tile.translate">
-    <g v-if="tile.unit?.cost" transform="translate(18,-28)" class="cost">
+    <g v-if="tile.unit?.cost" class="cost">
       <circle :style="{stroke: tile.style?.stroke, fill: tile.style?.darkStroke}" r="9px"></circle>
       <text>{{tile.unit.cost}}</text>
     </g>
@@ -21,6 +21,10 @@ defineProps<{
   </g></template>
 
 <style scoped>
+.cost {
+  transform: translate(0px,-30px);
+}
+
 .cost circle {
   stroke-width: 1px;
 }
