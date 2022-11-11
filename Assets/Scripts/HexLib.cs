@@ -31,8 +31,8 @@ namespace HT {
             set => _derivedSideLength = value;
         }
         public float SideToSide {
-            get => _derivedSideLength * 2;
-            set => _derivedSideLength = value / 2;
+            get => Apothem * 2;
+            set => Apothem = value / 2;
         }
     }
 
