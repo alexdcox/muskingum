@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3839b40884e84a828ed11ee85686d7f0, type: 3}
+  m_Name: Vulcan
+  m_EditorClassIdentifier: 
+  name: Vulcan
+  image: {fileID: 2800000, guid: 4e3e379e21045428ca53c071f3ada5a3, type: 3}
+  cost: 4
+  damage: 3
+  health: 8
+  speed: 2
