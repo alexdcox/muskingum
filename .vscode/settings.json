@@ -1,0 +1,5 @@
+{
+  "csharp.format.enable": true,
+  "omnisharp.enableEditorConfigSupport": false,
+  "editor.codeLens": false
+}

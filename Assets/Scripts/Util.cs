@@ -1,6 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
+using System.Linq;
+using System;
 
 public class Util : MonoBehaviour {
   public static Rect GetRectTransformRect(RectTransform rect) {
@@ -29,4 +32,23 @@ public class Util : MonoBehaviour {
     Gizmos.DrawLine(new Vector3(rect.xMin, rect.yMin, z), new Vector3(rect.xMin, rect.yMax, z));
   }
 
+  public static List<T> GetAllInstances<T>() where T : ScriptableObject {
+    return AssetDatabase.FindAssets($"t: {typeof(T).Name}").ToList()
+      .Select(AssetDatabase.GUIDToAssetPath)
+      .Select(AssetDatabase.LoadAssetAtPath<T>)
+      .ToList();
+  }
+}
+
+static class MyExtensions {
+  public static void Shuffle<T>(this IList<T> list) {
+    int n = list.Count;
+    while (n > 1) {
+      n--;
+      int k = (new System.Random()).Next(n + 1);
+      T value = list[k];
+      list[k] = list[n];
+      list[n] = value;
+    }
+  }
 }

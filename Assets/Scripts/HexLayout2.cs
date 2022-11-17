@@ -1,17 +1,12 @@
 using System.Collections.Generic;
-using HT;
+using HexGame;
 using UnityEditor;
 using UnityEngine;
-using Color = UnityEngine.Color;
-using UnityEngine.UI;
+using System;
+
+public delegate void LayoutCompleted();
 
 public class HexLayout2 : MonoBehaviour {
-    Layout _layout;
-    HexDimensions _hexDimensions;
-    Vector3 _centerTranslate;
-    Rect _hexRect;
-    Rect _innerRect;
-
     public enum Type {
         Board,
         Hand,
@@ -21,11 +16,24 @@ public class HexLayout2 : MonoBehaviour {
 
     public Type type = Type.Board;
 
+    public bool debugShowHexes;
     public bool debugShowMidpoint;
     public bool debugShowMargins;
     public bool debugShowHexBorder;
 
+    public GameController gameController;
+
+    [HideInInspector] public Layout layout;
+    [HideInInspector] public Vector3 centerTranslate;
+
+    HexDimensions _hexDimensions;
+    Rect _hexRect;
+    Rect _innerRect;
     bool _hasInit;
+
+    List<GameObject> _unitGameObjects = new();
+
+    public event LayoutCompleted LayoutCompleted;
 
     public class LayoutKind {
         public static readonly Vector2Int[] Board = {
@@ -54,7 +62,7 @@ public class HexLayout2 : MonoBehaviour {
         };
     }
 
-    private void Awake() {
+    void Awake() {
         if (transform == null)
             return; 
     }
@@ -68,18 +76,54 @@ public class HexLayout2 : MonoBehaviour {
         bool ok = Layout();
         if (!_hasInit && ok) {
             _hasInit = true;
+            LayoutCompleted?.Invoke();
+            InstantiateBackgroundHexagons();
+        }
+    }
 
-            var unitPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Unit.prefab");
+    void InstantiateBackgroundHexagons() {
+        foreach (Vector2 coord in GetHexCoords()) {
+            var hex = Hex.Axial((int)coord.x, (int)coord.y);
+            GameObject hexGameObject = CreateHexMesh(hex);
+            hexGameObject.name = String.Format("Bg Hex {0}", coord);
+            var material = new Material(AssetDatabase.LoadAssetAtPath<Shader>("Assets/Shaders/BlockColor.shadergraph"));
+            material.SetColor("_Color", Color.red);
+            material.SetColor("_Color", new Color32(36, 36, 36, 255));
+            hexGameObject.GetComponent<MeshRenderer>().material = material;
+        }
+    }
 
-            GameObject unitGameObject = Instantiate(unitPrefab, transform);
-            unitGameObject.transform.position = (Vector3)_layout.HexToPixel(Hex.Axial(0,0)) + transform.position + _centerTranslate;
+    public UnitRenderer SpawnUnit(UnitState unitState) {
+        var unitPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Unit2.prefab");
 
-            Transform hexOutline = unitGameObject.transform.Find("HexOutline");
-            var hexBounds = hexOutline.GetComponent<MeshRenderer>().bounds;
+        GameObject unitGameObject = Instantiate(unitPrefab, transform);
+        unitGameObject.transform.position = (Vector3)layout.HexToPixel(unitState.hex) + transform.position + centerTranslate;
 
-            var scale = _hexDimensions.SideToSide / hexBounds.size.x;
-            unitGameObject.transform.localScale *= scale;
-            unitGameObject.transform.localScale *= 0.92f;
+        Transform hexOutline = unitGameObject.transform.Find("HexOutline");
+        var hexBounds = hexOutline.GetComponent<MeshRenderer>().bounds;
+
+        var scale = _hexDimensions.SideToSide / hexBounds.size.x;
+        unitGameObject.transform.localScale *= scale;
+        unitGameObject.transform.localScale *= 0.94f;
+
+        var unitRenderer = unitGameObject.GetComponent<UnitRenderer>();
+        unitRenderer.unitState = unitState;
+        unitRenderer.unitDefinition = gameController.GetUnitDefinition(unitState.unit);
+        unitRenderer.SetPlayerColors();
+        unitRenderer.ShowUnitDetails();
+
+        _unitGameObjects.Add(unitGameObject);
+
+        return unitRenderer;
+
+        // var material = new Material(AssetDatabase.LoadAssetAtPath<Shader>("Assets/Shaders/NewTry.shadergraph"));
+        // material.SetTexture("_Image", unitDefinition.image);
+        // unitGameObject.transform.Find("HexOutline").GetComponent<MeshRenderer>().material = material;
+    }
+
+    public void RemoveAllUnits() {
+        foreach(var unitGameObject in _unitGameObjects) {
+            Destroy(unitGameObject);
         }
     }
     
@@ -101,22 +145,21 @@ public class HexLayout2 : MonoBehaviour {
             Util.GizmoDrawRect(transform, r, Color.yellow);
         }
 
-        // Draw Hexes
-
-        Gizmos.color = Color.green;
-        var position = transform.position;
-
-        foreach (Vector2Int coord in GetHexCoords()) {
-            var hex = Hex.Axial(coord.x, coord.y);
-            var hexCorners = _layout.PolygonCorners(hex);
-            Vector3 midpoint = _layout.HexToPixel(hex);
-            midpoint += position + _centerTranslate;
-            for (var i = 0; i < 6; i++) {
-                Vector3 from = (i == 0 ? hexCorners[5] : hexCorners[i - 1]) + position + _centerTranslate;
-                Vector3 to = hexCorners[i] + position + _centerTranslate;
-                Gizmos.DrawLine(from, to);
-                if (debugShowMidpoint) {
-                    Gizmos.DrawLine(midpoint, to);
+        if (debugShowHexes) {
+            Gizmos.color = Color.green;
+            var position = transform.position;
+            foreach (Vector2Int coord in GetHexCoords()) {
+                var hex = Hex.Axial(coord.x, coord.y);
+                var hexCorners = layout.PolygonCorners(hex);
+                Vector3 midpoint = layout.HexToPixel(hex);
+                midpoint += position + centerTranslate;
+                for (var i = 0; i < 6; i++) {
+                    Vector3 from = (i == 0 ? hexCorners[5] : hexCorners[i - 1]) + position + centerTranslate;
+                    Vector3 to = hexCorners[i] + position + centerTranslate;
+                    Gizmos.DrawLine(from, to);
+                    if (debugShowMidpoint) {
+                        Gizmos.DrawLine(midpoint, to);
+                    }
                 }
             }
         }
@@ -177,7 +220,7 @@ public class HexLayout2 : MonoBehaviour {
         }
 
         float size = size = _hexDimensions.CenterToVertex;
-        _layout = new Layout(Orientation.Pointy, new Vector2(size, size), new Vector2(0, 0));
+        layout = new Layout(Orientation.Pointy, new Vector2(size, size), new Vector2(0, 0));
 
         // Find Bounds and Center
         // The hexagons are already sized, we just need to translate from the 0,0 tile to the 0,0 local position.
@@ -186,7 +229,7 @@ public class HexLayout2 : MonoBehaviour {
 
         foreach (Vector2 coord in GetHexCoords()) {
             var hex = Hex.Axial((int)coord.x, (int)coord.y);
-            var p = _layout.HexToPixel(hex);
+            var p = layout.HexToPixel(hex);
             if (p.x < _hexRect.xMin) {
                 _hexRect.xMin = p.x;
             }
@@ -207,22 +250,22 @@ public class HexLayout2 : MonoBehaviour {
         _hexRect.xMin -= _hexDimensions.Apothem;
         _hexRect.xMax += _hexDimensions.Apothem;
 
-        _centerTranslate = new Vector3();
+        centerTranslate = new Vector3();
 
         // Shift the bounding hex bottom left to match the parent rect midpoint.
         Vector3 hexBottomLeft = new Vector3(_hexRect.xMin, _hexRect.yMin, 0) + position;
-        _centerTranslate = position - hexBottomLeft;
-        _hexRect.center += (Vector2)_centerTranslate;
+        centerTranslate = position - hexBottomLeft;
+        _hexRect.center += (Vector2)centerTranslate;
 
         // Shift the bounding hex from 0,0 to centered within the parent.
         Vector3 halfHeightWidth = new Vector3(_hexRect.width / 2, _hexRect.height / 2, 0);
-        _centerTranslate -= halfHeightWidth;
+        centerTranslate -= halfHeightWidth;
         _hexRect.center -= (Vector2)halfHeightWidth;
 
         return true;
     }
 
-    Vector2Int[] GetHexCoords() {
+    public Vector2Int[] GetHexCoords() {
         Vector2Int[] hexCoords = { };
 
         switch (type) {
@@ -243,23 +286,23 @@ public class HexLayout2 : MonoBehaviour {
         return hexCoords;
     }
 
-    void CreateHexMesh (Hex hex) {
-        if (_layout == null) {
-            return;
+    GameObject CreateHexMesh (Hex hex) {
+        if (layout == null) {
+            return null;
         }
         var triangles = new List<int>();
         var triangleCount = 0;
         var verticies = new List<Vector3>();
         var uv = new List<Vector2>();
-        var hexCorners = _layout.PolygonCorners(Hex.Cube(0, 0, 0));
-        Vector3 midpoint = _layout.HexToPixel(Hex.Cube(0, 0, 0));
+        var hexCorners = layout.PolygonCorners(Hex.Cube(0, 0, 0));
+        Vector3 midpoint = layout.HexToPixel(Hex.Cube(0, 0, 0));
 
         var hexHeight = _hexDimensions.VertexToVertex;
-        var hexWidth = _hexDimensions.SideToSide;
+        var hexWidth = _hexDimensions.Side * 2;
 
         Vector2 uvBottomLeft = (Vector2)midpoint - new Vector2(hexWidth / 2, hexHeight / 2);
         Vector2 uvTopRight = (Vector2)midpoint + new Vector2(hexWidth / 2, hexHeight / 2);
-        Vector2 uvSize = new Vector2(uvTopRight.x - uvBottomLeft.x, uvBottomLeft.y - uvTopRight.y);
+        Vector2 uvSize = new Vector2(uvTopRight.x - uvBottomLeft.x, uvTopRight.y - uvBottomLeft.y);
 
         for (var i = 0; i < 6; i++) {
             Vector3 from = (i == 0 ? hexCorners[5] : hexCorners[i - 1]);
@@ -270,10 +313,6 @@ public class HexLayout2 : MonoBehaviour {
             triangles.Add(triangleCount++);
             triangles.Add(triangleCount++);
             triangles.Add(triangleCount++);
-
-            // uv.Add(new Vector2(0, 0));
-            // uv.Add(new Vector2(from.x / _hexDimensions.Apothem, from.y / _hexDimensions.CenterToVertex));
-            // uv.Add(new Vector2(to.x / (_hexDimensions.Apothem*2), to.y / _hexDimensions.CenterToVertex));
 
             var uvMidpoint = ((Vector2)midpoint + (uvSize / 2)) / uvSize;
             var uvFrom = ((Vector2)from + (uvSize / 2)) / uvSize;
@@ -286,8 +325,8 @@ public class HexLayout2 : MonoBehaviour {
         GameObject go = new GameObject("SomeHexyLad") {
             transform = {
                 parent = transform,
-                position = transform.position + _centerTranslate + (Vector3)_layout.HexToPixel(hex),
-                rotation = Quaternion.Euler(0, 0, 180)
+                position = transform.position + centerTranslate + (Vector3)layout.HexToPixel(hex),
+                // rotation = Quaternion.Euler(0, 0, 0)
             }
         };
         Mesh mesh = new Mesh() {
@@ -295,13 +334,14 @@ public class HexLayout2 : MonoBehaviour {
             triangles = triangles.ToArray(),
             uv = uv.ToArray()
         };
-        // mesh.RecalculateUVDistributionMetrics();
-        // mesh.RecalculateNormals();
-        // mesh.RecalculateTangents();
+        mesh.RecalculateUVDistributionMetrics();
+        mesh.RecalculateNormals();
+        mesh.RecalculateTangents();
         go.AddComponent<MeshFilter>().mesh = mesh;
-        go.AddComponent<MeshRenderer>().material =
-            new Material(AssetDatabase.LoadAssetAtPath<Shader>("Assets/Shaders/NewTry.shadergraph"));
-        ;
+        go.AddComponent<MeshRenderer>().material = new Material(AssetDatabase.LoadAssetAtPath<Shader>("Assets/Shaders/NewTry.shadergraph"));
+        go.AddComponent<MeshCollider>();
+
+        return go;
     }
 
     [ContextMenu("LetsGetHexy")]
@@ -309,6 +349,4 @@ public class HexLayout2 : MonoBehaviour {
         CreateHexMesh(Hex.Axial(-3, 0));
         CreateHexMesh(Hex.Axial(3, 0));
     }
-
-
 }

@@ -7,16 +7,17 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Tilemaps;
+using HexGame;
 
 public class InputController : MonoBehaviour {
+    public GameController gameController;
+
     InputActions _inputActions;
-    TMP_Text _coords;
-    GameController _gameController;
+
+    HexLayout2 _lastMouseInLayout;
+    Hex _lastMouseInHex;
 
     void Start() {
-        _gameController = GameObject.Find("Controllers").GetComponent<GameController>();
-        _coords = GameObject.Find("Coords").GetComponent<TMP_Text>();
-
         _inputActions = new InputActions();
         _inputActions.Mouse.Enable();
         _inputActions.Mouse.MousePosition.performed += OnMouseMove;
@@ -24,53 +25,62 @@ public class InputController : MonoBehaviour {
 
     }
 
-    void OnEnable() {
-    }
+    // void OnEnable() {
+    //     _inputActions.Mouse.Enable();
+    // }
 
     // void OnDisable() {
     //     _inputActions.Mouse.Disable();
     // }
 
-    void Update() {
-        // Ray ray = _camera.ScreenPointToRay(Input.mousePosition);
-        // if (!Physics.Raycast(ray, out RaycastHit rayHitInfo))
-        //     return;
-        //
-        // GameObject currentHex = rayHitInfo.collider.gameObject;
-        //
-        // var meshRenderer = currentHex.GetComponent<MeshRenderer>();
-        // meshRenderer.material.color = Color.white;
-        //
-        // if (_previousHex != null && currentHex != _previousHex) {
-        //     _previousHex.GetComponent<MeshRenderer>().material.color = Color.black;
-        // }
-        // _previousHex = currentHex;
-        //
-        // if (Input.GetMouseButtonDown(0)) {
-        //     Debug.Log(currentHex.transform.parent.name);
-        // }
-    }
-
     void OnMouseMove (InputAction.CallbackContext ctx) {
-        var pos = ctx.ReadValue<Vector2>();
-        Vector2 cellPos = _gameController.MouseToCell(pos);
-        _coords.text = cellPos.ToString();
+        (HexLayout2 hexLayout, Hex hex) = RaycastForHex(ctx);
+
+        if (_lastMouseInHex != null && _lastMouseInHex != hex) {
+            OnHexOut(hexLayout, hex);
+        }
+        
+        if (hex != null) {
+            OnHexIn(hexLayout, hex);
+        }
     }
 
     void OnMouseClick(InputAction.CallbackContext ctx) {
-        // GameObject summoner = GameObject.Find("Summoner");
-        // Vector3 to = _gameController.CellToMouse(new Vector2(0, 0));
-        // summoner.transform.DOMove(to, .6f).SetEase(Ease.InOutCubic);
+        (HexLayout2 hexLayout, Hex hex) = RaycastForHex(ctx);
+        if (hex != null) {
+            gameController.OnHexClicked(hexLayout, hex);
+        }
+    }
 
-        var definitions = Resources.FindObjectsOfTypeAll<UnitDefinition>();
+    void OnHexOut(HexLayout2 hexLayout, Hex hex) {
+        gameController.OnHexMouseOut(_lastMouseInLayout, _lastMouseInHex);
+        _lastMouseInHex = null;
+        _lastMouseInLayout = null;
+    }
 
-        UnitDefinition summoner = null;
-        foreach (UnitDefinition definition in definitions) {
-            if (definition.name == "Summoner") {
-                summoner = definition;
+    void OnHexIn(HexLayout2 hexLayout, Hex hex) {
+        gameController.OnHexMouseIn(hexLayout, hex);
+        _lastMouseInLayout = hexLayout;
+        _lastMouseInHex = hex;
+    }
+
+    (HexLayout2 hexLayout, Hex hex) RaycastForHex(InputAction.CallbackContext ctx) {
+        HexLayout2 hexLayout = null;
+        Hex hex = null;
+        
+        var pos = Mouse.current.position.ReadValue();
+        var ray = Camera.main.ScreenPointToRay(pos);
+        
+        if (Physics.Raycast(ray, out RaycastHit rayHitInfo)) {
+            var go = rayHitInfo.collider.gameObject;
+            if (go.name.Contains("Bg")) {
+                hexLayout = go.transform.parent.GetComponent<HexLayout2>();
+                var worldPoint = Camera.main.ScreenToWorldPoint(pos);
+                var layoutPoint = worldPoint - hexLayout.transform.position - hexLayout.centerTranslate;
+                hex = hexLayout.layout.PixelToHex(layoutPoint);
             }
         }
 
-        _gameController.SpawnUnit(summoner, 2, new Vector2(0, 0));
+        return (hexLayout, hex);
     }
 }
