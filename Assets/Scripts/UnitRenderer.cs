@@ -15,32 +15,46 @@ public class UnitRenderer : MonoBehaviour {
   static readonly int Color1 = Shader.PropertyToID("_Color");
   static readonly int Image = Shader.PropertyToID("_Image");
 
-  Color _border;
-  Color _fill;
-  Material _hexMaterial;
+  public bool showOverlay;
+
+  private Color _border;
+  private Color _fill;
+  private Material _hexMaterial;
+  private bool _selected;
 
   void Start() {
     Render();
   }
 
   public void OnValidate() {
+    if (unitDefinition != null) {
+      unitState = new(){
+        unit = new Unit() {
+          name = unitDefinition.name,
+          cost = unitDefinition.cost,
+          damage = unitDefinition.damage,
+          health = unitDefinition.health,
+          speed = unitDefinition.speed,
+        },
+      };
+    }
     Render();
+    Debug.Log("@OnValidate");
   }
 
-  void Render() {
+  public void Render() {
     if (unitState == null) {
+      Debug.Log("-unitState");
+      return;
+    };
+    if (unitDefinition == null) {
+      Debug.Log("-unitDefinition");
       return;
     };
     if (hexShader == null) {
+      Debug.Log("-hexShader");
       return;
     };
-
-    SetPlayerColors();
-    ShowUnitDetails();
-  }
-
-  public void SetPlayerColors() {
-    // Debug.Log("setting player to: " + player);
 
     switch (unitState.playerNum) {
       case 1:
@@ -52,13 +66,17 @@ public class UnitRenderer : MonoBehaviour {
         _fill = new Color32(143, 5, 0, 255);
         break;
     }
+    if (_selected) {
+      _border = Color.yellow;
+      _fill = new Color32(146, 150, 6, 255);
+    }
 
     _hexMaterial = new Material(hexShader);
     _hexMaterial.SetColor(StrokeColor, _border);
+    _hexMaterial.SetTexture(Image, unitDefinition.image);
 
     Transform hexOutline = transform.Find("HexOutline");
-    var meshRenderer = hexOutline.GetComponent<MeshRenderer>();
-    meshRenderer.material = _hexMaterial;
+    hexOutline.GetComponent<MeshRenderer>().material = _hexMaterial;
 
     void SetCircleColors(Transform target) {
       Transform circleIn = target.Find("CircleIn");
@@ -76,11 +94,13 @@ public class UnitRenderer : MonoBehaviour {
 
     Transform cost = transform.Find("Cost");
     SetCircleColors(cost);
-    Transform healthRemaining = transform.Find("HealthRemaining");
-    SetCircleColors(healthRemaining);
-  }
+    if (unitState.unit.cost == 0) {
+      cost.gameObject.SetActive(false);
+    } else {
+      cost.gameObject.SetActive(true);
+      cost.Find("CostText").GetComponent<TMP_Text>().text = unitState.unit.cost.ToString();
+    }
 
-  public void ShowUnitDetails() {
     Transform nameText = transform.Find("NameText");
     nameText.GetComponent<TMP_Text>().text = unitState.unit.name;
 
@@ -91,22 +111,48 @@ public class UnitRenderer : MonoBehaviour {
     healthText.GetComponent<TMP_Text>().text = unitState.unit.health.ToString();
 
     Transform healthRemaining = transform.Find("HealthRemaining");
+    SetCircleColors(healthRemaining);
     if (unitState.remainingHealth < unitState.unit.health) {
       healthRemaining.gameObject.SetActive(true);
-      healthRemaining.transform.Find("HealthRemaining").GetComponent<TMP_Text>().text =
-          unitState.remainingHealth.ToString();
+      healthRemaining.transform.Find("RemainingText").GetComponent<TMP_Text>().text = unitState.remainingHealth.ToString();
     } else {
       healthRemaining.gameObject.SetActive(false);
     }
 
-    Transform cost = transform.Find("Cost");
-    if (unitState.unit.name == "Summoner") {
-      cost.gameObject.SetActive(false);
-    } else {
-      cost.gameObject.SetActive(true);
-      cost.Find("CostText").GetComponent<TMP_Text>().text = unitState.unit.cost.ToString();
-    }
+    Transform speedText = transform.Find("SpeedText");
+    speedText.GetComponent<TMP_Text>().text = unitState.unit.speed.ToString();
 
-    _hexMaterial.SetTexture(Image, unitDefinition.image);
+    var overlay = transform.Find("Overlay");
+    if (showOverlay) {
+      overlay.gameObject.SetActive(true);
+      // GameObject combinedGO = overlay.Find("CombinedHexCircleMesh")?.gameObject;
+      // if (combinedGO == null) {
+      //   Debug.Log("Combining meshes");
+      //   var hexMesh = overlay.Find("Hex").GetComponent<MeshFilter>();
+      //   var circleMesh = overlay.Find("Circle").GetComponent<MeshFilter>();
+      //   MeshFilter[] meshFilters = {hexMesh, circleMesh};
+      //   CombineInstance[] combine = new CombineInstance[meshFilters.Length];
+      //   for (var i = 0; i < meshFilters.Length; i++) {
+      //       combine[i].mesh = meshFilters[i].sharedMesh;
+      //       combine[i].transform = meshFilters[i].transform.localToWorldMatrix;
+      //       meshFilters[i].gameObject.SetActive(false);
+      //   }
+      //   var combinedMesh = new Mesh();
+      //   combinedMesh.CombineMeshes(combine, true, true, false);
+      //   combinedGO = new GameObject("CombinedHexCircleMesh");
+      //   combinedGO.AddComponent<MeshFilter>().mesh = combinedMesh;
+      //   combinedGO.transform.parent = overlay;
+      //   var combinedMeshRenderer = combinedGO.AddComponent<MeshRenderer>();
+      //   combinedMeshRenderer.material = hexMesh.GetComponent<MeshRenderer>().material;
+      //   // Instantiate(combinedGO, transform.position, Quaternion.identity, transform);
+      // }
+    } else {
+      overlay.gameObject.SetActive(false);
+    }
+  }
+
+  public void SetSelected(bool selected) {
+    _selected = selected;
+    Render();
   }
 }

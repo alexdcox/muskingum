@@ -1,4 +1,6 @@
 using UnityEngine;
+using System;
+using System.Collections.Generic;
 
 namespace HexGame {
   public class Hex {
@@ -6,7 +8,7 @@ namespace HexGame {
     public int r;
     public int s;
 
-    public static Vector3[] Directions = {
+    public static Vector3Int[] Directions = {
       new(1, 0, -1),
       new(1, -1, 0),
       new(0, -1, 1),
@@ -15,7 +17,7 @@ namespace HexGame {
       new(0, 1, -1),
     };
 
-    public static Vector3[] Diagonals = {
+    public static Vector3Int[] Diagonals = {
       new(2, -1, -1),
       new(1, -2, 1),
       new(-1, -1, 2),
@@ -44,15 +46,45 @@ namespace HexGame {
     }
 
     public new string ToString() {
-      return q + "," + r + "," + s;
+      return q + "," + r;
     }
 
-    public bool Equals(Hex other) {
-      if (other == null) {
-        return false;
-      }
-      return q == other.q && r == other.r && s == other.s;
+    // public override bool Equals(object obj) {
+    //   if (this == null) {
+    //     return false;
+    //   }
+    //   if (obj == null) {
+    //     return false;
+    //   }
+    //   return this.Equals(obj as Hex);
+    // }
+
+    public bool Equals(Hex o) {
+        // if (o is null) {
+        //     return false;
+        // }
+
+        // if (Object.ReferenceEquals(this, o)) {
+        //     return true;
+        // }
+
+        // if (this.GetType() != o.GetType()) {
+        //     return false;
+        // }
+
+        return (q == o.q) && (r == o.r);
     }
+    
+    // public static bool operator ==(Hex a, Hex b) {
+    //   if (a is null || b is null) {
+    //     return false;
+    //   }
+    //   return a.Equals(b);
+    // }
+
+    // public static bool operator !=(Hex a, Hex b) {
+    //     return !(a == b);
+    // }
 
     public static Hex operator +(Hex a, Hex b) {
       return new Hex(a.q + b.q, a.r + b.r, a.s + b.s);
@@ -96,6 +128,14 @@ namespace HexGame {
 
     public Hex Neighbor(int direction) {
       return Add(Directions[direction]);
+    }
+
+    public List<Hex> Neighbors() {
+      List<Hex> neighbours = new();
+      foreach(var direction in Directions) {
+        neighbours.Add(Add(new Hex(direction.x, direction.y, direction.z)));
+      }
+      return neighbours;
     }
 
     public Hex DiagonalNeighbor(int direction) {

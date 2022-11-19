@@ -15,7 +15,7 @@ namespace HexGame {
     BurningSpears,
     FireStalker,
     FireWorm,
-    FireDancer,
+    Firedancer,
     Firesworn,
     GiantSlayer,
     Gladiatrix,
@@ -44,7 +44,7 @@ namespace HexGame {
       {"Burning Spears", UnitId.BurningSpears},
       {"Fire Stalker", UnitId.FireStalker},
       {"Fire Worm", UnitId.FireWorm},
-      {"Fire Dancer", UnitId.FireDancer},
+      {"Firedancer", UnitId.Firedancer},
       {"Firesworn", UnitId.Firesworn},
       {"Giant Slayer", UnitId.GiantSlayer},
       {"Gladiatrix", UnitId.Gladiatrix},
@@ -55,8 +55,8 @@ namespace HexGame {
       {"Magma Turret", UnitId.MagmaTurret},
       {"Moloch", UnitId.Moloch},
       {"Skyfire Drake", UnitId.SkyfireDrake},
-      {"Sunreaver", UnitId.Sunreaver},
-      {"Vulca", UnitId.Vulcan},
+      {"Sun Reaver", UnitId.Sunreaver},
+      {"Vulcan", UnitId.Vulcan},
     };
 
     public string name;
@@ -67,6 +67,10 @@ namespace HexGame {
 
     public bool HasId(UnitId id) {
       return Unit.IdToString(id) == name;
+    }
+
+    public UnitId Id() {
+      return StringToId(name);
     }
 
     public static string IdToString(UnitId id) {

@@ -9,20 +9,28 @@ namespace HexGame {
     public UnitCollection() { }
 
     public UnitCollection(List<Unit> units) {
-      // TODO: Is this a shallow clone?
+      // TODO: Is this a shallow clone? I think so.
       _units = new List<Unit>(units);
     }
 
-      public UnitCollection(UnitCollection unitCollection) {
-      _units = unitCollection._units;
+    public UnitCollection(UnitCollection unitCollection) {
+      _units = new List<Unit>(unitCollection._units);
     }
     
     public void Shuffle() {
       _units.Shuffle();
     }
 
+    public int Count() {
+      return _units.Count();
+    }
+
     public List<Unit> Draw(int x) {
-      return _units.Take(x).ToList();
+      var draw = _units.Take(x).ToList();
+      foreach (var drawn in draw) {
+        _units.Remove(drawn);
+      }
+      return draw;
     }
 
     public UnitCollection Filter(Func<Unit, bool> cb) {
@@ -35,13 +43,14 @@ namespace HexGame {
       return filtered;
     }
 
-    public Unit Find(Func<Unit, bool> cb) {
-      foreach(Unit unit in _units) {
-        if (cb(unit)) {
-          return unit;
-        }
-      }
-      return null;
+    public Unit Find(System.Predicate<Unit> cb) {
+      return _units.Find(cb);
+      // foreach(Unit unit in _units) {
+      //   if (cb(unit)) {
+      //     return unit;
+      //   }
+      // }
+      // return null;
     }
 
     public Unit FindById(UnitId id) {

@@ -14,8 +14,8 @@ public class InputController : MonoBehaviour {
 
     InputActions _inputActions;
 
-    HexLayout2 _lastMouseInLayout;
-    Hex _lastMouseInHex;
+    HexLayout2 _lastMouseInLayout = null;
+    Hex _lastMouseInHex = null;
 
     void Start() {
         _inputActions = new InputActions();
@@ -35,33 +35,38 @@ public class InputController : MonoBehaviour {
 
     void OnMouseMove (InputAction.CallbackContext ctx) {
         (HexLayout2 hexLayout, Hex hex) = RaycastForHex(ctx);
-
-        if (_lastMouseInHex != null && _lastMouseInHex != hex) {
-            OnHexOut(hexLayout, hex);
+       
+        if (_lastMouseInHex != null && hex == null) {
+            gameController.OnHexMouseOut(_lastMouseInLayout, _lastMouseInHex);
+            _lastMouseInHex = null;
+            _lastMouseInLayout = null;
         }
         
         if (hex != null) {
-            OnHexIn(hexLayout, hex);
+            // skip mouse in if we're already in that hex
+            if (_lastMouseInHex != null && _lastMouseInHex.Equals(hex)) {
+                return;
+            }
+            // mouse out of previous hex if we've moved the mouse too quickly into another hex
+            if (_lastMouseInHex != null && !_lastMouseInHex.Equals(hex)) {
+                gameController.OnHexMouseOut(_lastMouseInLayout, _lastMouseInHex);
+                _lastMouseInHex = null;
+                _lastMouseInLayout = null;
+            }
+            gameController.OnHexMouseIn(hexLayout, hex);
+            _lastMouseInHex = hex;
+            _lastMouseInLayout = hexLayout;
         }
     }
 
     void OnMouseClick(InputAction.CallbackContext ctx) {
         (HexLayout2 hexLayout, Hex hex) = RaycastForHex(ctx);
-        if (hex != null) {
+        if (hexLayout == null || hex == null) {
+            return;
+        }
+        if (hexLayout != null && hex != null) {
             gameController.OnHexClicked(hexLayout, hex);
         }
-    }
-
-    void OnHexOut(HexLayout2 hexLayout, Hex hex) {
-        gameController.OnHexMouseOut(_lastMouseInLayout, _lastMouseInHex);
-        _lastMouseInHex = null;
-        _lastMouseInLayout = null;
-    }
-
-    void OnHexIn(HexLayout2 hexLayout, Hex hex) {
-        gameController.OnHexMouseIn(hexLayout, hex);
-        _lastMouseInLayout = hexLayout;
-        _lastMouseInHex = hex;
     }
 
     (HexLayout2 hexLayout, Hex hex) RaycastForHex(InputAction.CallbackContext ctx) {

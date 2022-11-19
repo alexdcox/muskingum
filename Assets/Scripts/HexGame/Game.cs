@@ -7,13 +7,12 @@ namespace HexGame {
   public delegate void StateChanged(GameState gameState);
   
   public class Game {
-    // TODO: update for center being 0,0
-    public static Dictionary<DoubledCoord, int> EnergyCoords = new Dictionary<DoubledCoord, int>(){
-      {new DoubledCoord(3, 1), 1},
-      {new DoubledCoord(3, 3), 1},
-      {new DoubledCoord(9, 1), 1},
-      {new DoubledCoord(9, 3), 1},
-      {new DoubledCoord(6, 2), 2},
+    public static Dictionary<Hex, int> EnergyCoords = new(){
+      {Hex.Axial(0, 0), 2},
+      {Hex.Axial(-2, 1), 1},
+      {Hex.Axial(-1, -1), 1},
+      {Hex.Axial(1, 1), 1},
+      {Hex.Axial(2, -1), 1},
     };
     
     UnitCollection _availableUnits;
@@ -41,11 +40,11 @@ namespace HexGame {
       UnitCollection summonable = availableUnits.Filter(unit => unit.name != summoner.name);
       
       for (int playerNum = 0; playerNum <= 1; playerNum++) {
-        PlayerState state = new PlayerState();
-        state.draw = new UnitCollection(summonable);
-        state.draw.Shuffle();
-        state.hand.Add(state.draw.Draw(5));
-        _players.Add(state);
+        PlayerState player = new PlayerState();
+        player.draw = new UnitCollection(summonable);
+        player.draw.Shuffle();
+        player.hand.Add(player.draw.Draw(5));
+        _players.Add(player);
       }
       
       _boardUnits.Add(new UnitState() {
@@ -64,16 +63,13 @@ namespace HexGame {
     }
 
     public void Start() {
-      EmitStateChanged();
+      NextTurn();
     }
 
     void NextTurn() {
-      _turn.playerNum++;
-      if (_turn.playerNum > 2) {
-        _turn.playerNum = 1;
-      }
-
-      _turn.stage = TurnStage.Summon;
+      _turn = new TurnState() {
+        playerNum = (_turn.playerNum + 1) % 2
+      };
       Debug.Log(String.Format("Handling player {0} turn", _turn.playerNum + 1));
       CalculateEnergyGain();
       var player = _players[_turn.playerNum];
@@ -99,8 +95,7 @@ namespace HexGame {
             if ((int)unit.playerNum != playerIndex) {
               continue;
             }
-            // TODO: Need to get the layout doubled convertion setup cleanly somewhere.
-            if (unit.hex == _layout.CoordToHex(coord)) {
+            if (unit.hex.Equals(coord)) {
               energyGain += energy;
             }
           }
@@ -110,12 +105,14 @@ namespace HexGame {
       }
     }
 
-    void Summon(UnitId unitId, Hex to) {
-      var playerIndex = _turn.playerNum - 1;
-      var playerNum = _turn.playerNum;
-      var player = _players[playerIndex];
-      var unit = _availableUnits.FindById(unitId);
-      String.Format("Player {0} summoning {1} to {2}", playerNum, unit.name, to);
+    public void Summon(UnitId unitId, Hex to) {
+      var player = _players[_turn.playerNum];
+      var unit = player.hand.FindById(unitId);
+      if (unit == null) {
+        Debug.Log(String.Format("Cannot summon {0}, not in player hand", Unit.IdToString(unitId)));
+        return;
+      }
+      String.Format("Player {0} summoning {1} to {2}", _turn.playerNum, unit.name, to.ToString());
       var unitState = new UnitState{
         unit = unit,
         hex = to,
@@ -131,13 +128,14 @@ namespace HexGame {
         return;
       }
       player.energy -= unit.cost;
-      var summoner = _boardUnits.Find(bu => bu.playerNum == playerNum && bu.unit.HasId(UnitId.Summoner));
+      var summoner = _boardUnits.Find(bu => bu.playerNum == _turn.playerNum && bu.unit.HasId(UnitId.Summoner));
       if (to.Distance(summoner.hex) != 1) {
         Debug.Log("Cannae summon there ya nonse");
         return;
       }
       _turn.unitsSummoned.Add(to);
       _boardUnits.Add(unitState);
+      player.draw.RemoveById(unitId);
       player.hand.RemoveById(unitId);
       player.hand.Add(player.draw.Draw(1));
 
@@ -145,19 +143,9 @@ namespace HexGame {
       EmitStateChanged();
     }
 
-    void SkipSummon(int playerNum) {
-      if (playerNum != _turn.playerNum) {
-        Debug.Log("You cant skip another player summon");
-        return;
-      }
-      Debug.Log(String.Format("Player {0} skipping summon", _turn.playerNum));
-      _turn.stage = TurnStage.Move;
-      EmitStateChanged();
-    }
-
-    void Move(Hex from, Hex to) {
-      Debug.Log(String.Format("Player {0} attempting to move from {1} to {2}", _turn.playerNum, from, to));
-      var unitState = _boardUnits.Find(unit => unit.hex == from);
+    public void Move(Hex from, Hex to) {
+      Debug.Log(String.Format("Player {0} attempting to move from {1} to {2}", _turn.playerNum, from.ToString(), to.ToString()));
+      var unitState = _boardUnits.Find(unit => unit.hex.Equals(from));
       if (unitState is null) {
         Debug.Log("No unit");
         return;
@@ -165,7 +153,7 @@ namespace HexGame {
       var distance = from.Distance(to);
       var hasSummoningSickness = false;
       foreach (var summoned in _turn.unitsSummoned) {
-        if (summoned == from) {
+        if (summoned.Equals(from)) {
           hasSummoningSickness = true;
           break;
         }
@@ -178,12 +166,12 @@ namespace HexGame {
         Debug.Log("You aint got long enough legs for that pal");
         return;
       }
-      var existingUnit = _boardUnits.Find(unit => unit.hex == to);
-      if (existingUnit == null) {
+      var existingUnit = _boardUnits.Find(unit => unit.hex.Equals(to));
+      if (existingUnit != null) {
         Debug.Log("Trying to move on top of another unit failed, they werent feeling frisky");
         return;
       }
-      var alreadyMoved = _turn.unitsMoved.Find(coord => coord == from);
+      var alreadyMoved = _turn.unitsMoved.Find(coord => coord.Equals(from));
       if (alreadyMoved != null) {
         Debug.Log("The poor devils already done their duty, give em a rest");
         return;
@@ -194,30 +182,24 @@ namespace HexGame {
       if (_turn.unitsSummoned.Count > 0) {
         unitCount--;
       }
-      if (_turn.unitsMoved.Count == unitCount) {
-        Debug.Log("All units moved, progressing to attack phase");
-        _turn.stage = TurnStage.Attack;
-      }
       CalculateEnergyGain();
       EmitStateChanged();
     }
 
-    void SkipMove(int player) {
+    public void SkipTurn(int player) {
       if (player != _turn.playerNum) {
-        Debug.Log("You cant skip another player move");
+        Debug.Log("You cant skip another player turn");
         return;
       }
-      Debug.Log(String.Format("Player {0} skipping move", _turn.playerNum));
-      _turn.stage = TurnStage.Attack;
-      EmitStateChanged();
+      Debug.Log(String.Format("Player {0} skipping turn", _turn.playerNum));
+      NextTurn();
     }
 
-    void Attack(Hex from, Hex to) {
-      var playerNum = _turn.playerNum;
-      Debug.Log(String.Format("Player {0} attacking from {1} to {2} to", playerNum, from, to));
+    public void Attack(Hex from, Hex to) {
+      Debug.Log(String.Format("Player {0} attacking from {1} to {2} to", _turn.playerNum, from.ToString(), to.ToString()));
       var hasSummoningSickness = false;
       foreach (var summoned in _turn.unitsSummoned) {
-        if (summoned == from) {
+        if (summoned.Equals(from)) {
           hasSummoningSickness = true;
           break;
         }
@@ -226,22 +208,22 @@ namespace HexGame {
         Debug.Log("Them theres got the summoning sickness");
         return;
       }
-      var fromUnitState = _boardUnits.Find(u => u.hex == from);
+      var fromUnitState = _boardUnits.Find(u => u.hex.Equals(from));
       if (fromUnitState == null) {
         Debug.Log("Theres... nothing there. You cant attack with nothing.");
         return;
       }
-      var toUnitState = _boardUnits.Find(u => u.hex == to);
+      var toUnitState = _boardUnits.Find(u => u.hex.Equals(to));
       if (toUnitState == null) {
         Debug.Log("You cant attack thin air");
         return;
       }
-      var alreadyAttacked = _turn.unitsAttacked.Find(coord => coord == from);
+      var alreadyAttacked = _turn.unitsAttacked.Find(coord => coord.Equals(from));
       if (alreadyAttacked != null) {
         Debug.Log("This unit thinks one battle is enough for the time being");
         return;
       }
-      var isFriendly = _boardUnits.Find(bu => bu.hex == to && bu.playerNum == playerNum);
+      var isFriendly = _boardUnits.Find(bu => bu.hex.Equals(to) && bu.playerNum == _turn.playerNum);
       if (isFriendly != null) {
         Debug.Log("Whoa there laddy, that ones on our side");
         return;
@@ -270,16 +252,7 @@ namespace HexGame {
       }
     }
 
-    void SkipAttack(int player) {
-      if (player != _turn.playerNum) {
-        Debug.Log("You cant skip another player attack");
-        return;
-      }
-      Debug.Log(String.Format("Player {0} skipping attack", _turn.playerNum));
-      NextTurn();
-    }
-
-    void Log(string log) {
+    public void Log(string log) {
       Debug.Log(log);
     }
 

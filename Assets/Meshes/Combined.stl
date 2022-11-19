@@ -1,0 +1,254 @@
+solid CombinedHexCircleMesh(Clone)
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3107.08 63.03685
+	vertex -1958.625 3106.589 57.24849
+	vertex -1958.625 3107.08 51.46012
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3107.08 63.03685
+	vertex -1958.625 3107.08 51.46012
+	vertex -1958.625 3108.533 45.89421
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3117.938 81.91832
+	vertex -1958.625 3114.068 78.22845
+	vertex -1958.625 3117.938 32.57865
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3117.938 81.91832
+	vertex -1958.625 3117.938 32.57865
+	vertex -1958.625 3122.353 29.83684
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3122.353 84.66013
+	vertex -1958.625 3117.938 81.91832
+	vertex -1958.625 3122.353 29.83684
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3122.353 84.66013
+	vertex -1958.625 3122.353 29.83684
+	vertex -1958.625 3127.143 28.14843
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3127.143 86.34854
+	vertex -1958.625 3122.353 84.66013
+	vertex -1958.625 3127.143 28.14843
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3127.143 86.34854
+	vertex -1958.625 3127.143 28.14843
+	vertex -1958.625 3132.125 27.57833
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3132.125 86.91864
+	vertex -1958.625 3127.143 86.34854
+	vertex -1958.625 3132.125 27.57833
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3132.125 86.91864
+	vertex -1958.625 3132.125 27.57833
+	vertex -1958.625 3137.107 28.14843
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3153.357 73.73235
+	vertex -1958.625 3150.182 78.22845
+	vertex -1958.625 3153.357 40.76463
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3153.357 73.73235
+	vertex -1958.625 3153.357 40.76463
+	vertex -1958.625 3155.717 45.89421
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3155.717 68.60277
+	vertex -1958.625 3153.357 73.73235
+	vertex -1958.625 3155.717 45.89421
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3155.717 68.60277
+	vertex -1958.625 3155.717 45.89421
+	vertex -1958.625 3157.17 51.46012
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3157.17 63.03685
+	vertex -1958.625 3155.717 68.60277
+	vertex -1958.625 3157.17 51.46012
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3157.17 51.46012
+	vertex -1958.625 3157.661 57.24849
+	vertex -1958.625 3157.17 63.03685
+endloop
+endfacet
+facet normal -1 0 0
+outer loop
+	vertex -1958.625 3224.435 126.3393
+	vertex -1958.625 3333.352 63.45568
+	vertex -1958.625 3224.435 0.5720041
+endloop
+endfacet
+facet normal -1 0 0
+outer loop
+	vertex -1958.625 3333.352 63.45568
+	vertex -1958.625 3333.352 -62.31164
+	vertex -1958.625 3224.435 0.5720041
+endloop
+endfacet
+facet normal -1 0 0
+outer loop
+	vertex -1958.625 3115.517 -62.31166
+	vertex -1958.625 3115.517 63.45567
+	vertex -1958.625 3224.435 0.5720041
+endloop
+endfacet
+facet normal -1 0 0
+outer loop
+	vertex -1958.625 3115.517 63.45567
+	vertex -1958.625 3224.435 126.3393
+	vertex -1958.625 3224.435 0.5720041
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3108.533 68.60277
+	vertex -1958.625 3107.08 63.03685
+	vertex -1958.625 3108.533 45.89421
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3108.533 68.60277
+	vertex -1958.625 3108.533 45.89421
+	vertex -1958.625 3110.893 40.76463
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3110.893 73.73235
+	vertex -1958.625 3108.533 68.60277
+	vertex -1958.625 3110.893 40.76463
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3110.893 73.73235
+	vertex -1958.625 3110.893 40.76463
+	vertex -1958.625 3114.068 36.26852
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3114.068 78.22845
+	vertex -1958.625 3110.893 73.73235
+	vertex -1958.625 3114.068 36.26852
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3114.068 78.22845
+	vertex -1958.625 3114.068 36.26852
+	vertex -1958.625 3117.938 32.57865
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3137.107 86.34854
+	vertex -1958.625 3132.125 86.91864
+	vertex -1958.625 3137.107 28.14843
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3137.107 86.34854
+	vertex -1958.625 3137.107 28.14843
+	vertex -1958.625 3141.897 29.83684
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3141.897 84.66013
+	vertex -1958.625 3137.107 86.34854
+	vertex -1958.625 3141.897 29.83684
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3141.897 84.66013
+	vertex -1958.625 3141.897 29.83684
+	vertex -1958.625 3146.312 32.57865
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3146.312 81.91832
+	vertex -1958.625 3141.897 84.66013
+	vertex -1958.625 3146.312 32.57865
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3146.312 81.91832
+	vertex -1958.625 3146.312 32.57865
+	vertex -1958.625 3150.182 36.26852
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3150.182 78.22845
+	vertex -1958.625 3146.312 81.91832
+	vertex -1958.625 3150.182 36.26852
+endloop
+endfacet
+facet normal 1 0 0
+outer loop
+	vertex -1958.625 3150.182 78.22845
+	vertex -1958.625 3150.182 36.26852
+	vertex -1958.625 3153.357 40.76463
+endloop
+endfacet
+facet normal -1 0 0
+outer loop
+	vertex -1958.625 3333.352 -62.31164
+	vertex -1958.625 3224.435 -125.1953
+	vertex -1958.625 3224.435 0.5720041
+endloop
+endfacet
+facet normal -1 0 0
+outer loop
+	vertex -1958.625 3224.435 -125.1953
+	vertex -1958.625 3115.517 -62.31166
+	vertex -1958.625 3224.435 0.5720041
+endloop
+endfacet
+endsolid CombinedHexCircleMesh(Clone)
