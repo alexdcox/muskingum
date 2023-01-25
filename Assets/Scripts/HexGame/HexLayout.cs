@@ -66,26 +66,10 @@ namespace HexGame {
         doubled.QDoubledToCube();
     }
 
-    public Hex CoordToHex(OffsetCoord offset) {
-      // TODO: FIX
-      // return _layout.orientation == Orientation.Pointy ? 
-      //   offset. :
-      //   doubled.QDoubledToCube();
-      return null;
-    }
-
     public DoubledCoord HexToDoubledCoord(Hex hex) {
       return orientation == Orientation.Pointy ? 
         DoubledCoord.RDoubledFromCube(hex) :
         DoubledCoord.QDoubledFromCube(hex);
-    }
-
-    public OffsetCoord HexToOffsetCoord(Hex hex) {
-      // return _layout.orientation == Orientation.Pointy ? 
-      //   OffsetCoord.RDoubledFromCube(hex) :
-      //   OffsetCoord.QDoubledFromCube(hex);
-      // TODO: Fix me!
-      return null;
     }
   }
 }

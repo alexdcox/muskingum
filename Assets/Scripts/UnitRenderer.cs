@@ -27,32 +27,17 @@ public class UnitRenderer : MonoBehaviour {
   }
 
   public void OnValidate() {
-    // if (unitDefinition != null) {
-    //   unitState = new(){
-    //     unit = new Unit() {
-    //       name = unitDefinition.name,
-    //       cost = unitDefinition.cost,
-    //       damage = unitDefinition.damage,
-    //       health = unitDefinition.health,
-    //       speed = unitDefinition.speed,
-    //     },
-    //   };
-    // }
     Render();
-    // Debug.Log("@OnValidate");
   }
 
   public void Render() {
     if (unitState == null) {
-      // Debug.Log("no unitState, cannot render player color");
       return;
     };
     if (unitDefinition == null) {
-      // Debug.Log("-unitDefinition");
       return;
     };
     if (hexShader == null) {
-      // Debug.Log("-hexShader");
       return;
     };
 
@@ -125,27 +110,6 @@ public class UnitRenderer : MonoBehaviour {
     var overlay = transform.Find("Overlay");
     if (showOverlay) {
       overlay.gameObject.SetActive(true);
-      // GameObject combinedGO = overlay.Find("CombinedHexCircleMesh")?.gameObject;
-      // if (combinedGO == null) {
-      //   Debug.Log("Combining meshes");
-      //   var hexMesh = overlay.Find("Hex").GetComponent<MeshFilter>();
-      //   var circleMesh = overlay.Find("Circle").GetComponent<MeshFilter>();
-      //   MeshFilter[] meshFilters = {hexMesh, circleMesh};
-      //   CombineInstance[] combine = new CombineInstance[meshFilters.Length];
-      //   for (var i = 0; i < meshFilters.Length; i++) {
-      //       combine[i].mesh = meshFilters[i].sharedMesh;
-      //       combine[i].transform = meshFilters[i].transform.localToWorldMatrix;
-      //       meshFilters[i].gameObject.SetActive(false);
-      //   }
-      //   var combinedMesh = new Mesh();
-      //   combinedMesh.CombineMeshes(combine, true, true, false);
-      //   combinedGO = new GameObject("CombinedHexCircleMesh");
-      //   combinedGO.AddComponent<MeshFilter>().mesh = combinedMesh;
-      //   combinedGO.transform.parent = overlay;
-      //   var combinedMeshRenderer = combinedGO.AddComponent<MeshRenderer>();
-      //   combinedMeshRenderer.material = hexMesh.GetComponent<MeshRenderer>().material;
-      //   // Instantiate(combinedGO, transform.position, Quaternion.identity, transform);
-      // }
     } else {
       overlay.gameObject.SetActive(false);
     }

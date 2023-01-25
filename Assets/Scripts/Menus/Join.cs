@@ -7,7 +7,6 @@ using Newtonsoft.Json;
 using TMPro;
 
 public class Join : MonoBehaviour {
-  private bool isLoading = true;
   private HostInfo[] hosts;
 
   private Color defaultColor = new Color32(226, 226, 226, 255);

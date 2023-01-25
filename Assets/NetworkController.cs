@@ -27,8 +27,6 @@ public class NetworkController : MonoBehaviour {
   private const string MessageTypeInPlayerIndex = "playerindex";
   private const string MessageTypeInGameStats = "gamestats";
 
-  // public event CombatantFoundEvent CombatantFound;
-  // public delegate void CombatantFoundEvent();
   private bool _isAwaitingCombatant = false;
 
   WebSocket websocket;

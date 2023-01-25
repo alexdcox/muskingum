@@ -46,19 +46,6 @@ public class GameController : MonoBehaviour {
     MoveAttack
   }
 
-  void Start() {
-    // TODO: remove
-    // string state = @"{""units"":[{""id"":0,""playerIndex"":0,""coord"":{""col"":-6,""row"":0},""remainingHealth"":10},{""id"":0,""playerIndex"":1,""coord"":{""col"":6,""row"":0},""remainingHealth"":10}],""players"":[{""index"":0,""energy"":1,""energyGain"":1,""draw"":[1,2,3,5,6,7,8,10,11,12,14,16,17,18,19,21,22,23,24],""hand"":[20,13,4,9,15],""discard"":[]},{""index"":1,""energy"":0,""energyGain"":1,""draw"":[17,2,8,20,15,18,22,11,5,1,13,4,10,19,23,6,12,7,24],""hand"":[14,9,16,21,3],""discard"":[]}],""turn"":{""playerIndex"":0,""unitsMoved"":[],""unitsAttacked"":[],""unitsSummoned"":[]}}";
-    // _currentPlayerIndex = 0;
-    // GameState gameState = JsonConvert.DeserializeObject<GameState>(state);
-    // NewGame(gameState);
-
-    // string state = @"{""units"":[{""id"":0,""playerIndex"":0,""coord"":{""col"":-4,""row"":0},""remainingHealth"":10},{""id"":0,""playerIndex"":1,""coord"":{""col"":4,""row"":0},""remainingHealth"":10},{""id"":11,""coord"":{""col"":-2,""row"":0},""playerIndex"":1,""remainingHealth"":7}],""players"":[{""index"":0,""energy"":7,""energyGain"":1,""draw"":[17,1,24,14,12,15,22,21,10,23,18,6,4,5,8,20,3,7,16],""hand"":[9,11,13,19,2],""discard"":[]},{""index"":1,""energy"":2,""energyGain"":1,""draw"":[24,18,16,7,1,9,19,13,3,6,15,2,8,17,12,22,10,21],""hand"":[20,14,4,23,5],""discard"":[]}],""turn"":{""index"":15,""playerIndex"":1,""unitsMoved"":[{""col"":-2,""row"":0}],""unitsAttacked"":[],""unitsSummoned"":[]}}";
-    // _currentPlayerIndex = 1;
-    // GameState gameState = JsonConvert.DeserializeObject<GameState>(state);
-    // NewGame(gameState);
-  }
-
   void Update() {
     if (
       !_layoutsComplete &&
@@ -80,14 +67,12 @@ public class GameController : MonoBehaviour {
 
   public void OnHexMouseIn(HexLayout2 hexLayout, Hex hex) {
     var doubled = hexLayout.layout.HexToDoubledCoord(hex);
-    // coords.text = String.Format("Layout {0} Axial({1},{2}) Doubled({3},{4})", hexLayout.name, (int)hex.q, (int)hex.r, (int)doubled.col, (int)doubled.row);
     coords.text = String.Format("D {0}, {1}", (int)doubled.col, (int)doubled.row);
 
     var playerIndex = hexLayout.GetPlayerIndex();
     if (hexLayout.type == HexLayout2.Type.Hand && playerIndex > -1 && playerIndex == _lastState.turn.playerIndex) {
       var unit = hexLayout.GetUnitRenderer(hex);
       if (unit == null) {
-        // TODO: Work out why we sometimes get no unit.
         return;
       }
       unit.SetSelected(true);
@@ -101,7 +86,6 @@ public class GameController : MonoBehaviour {
     if (hexLayout.type == HexLayout2.Type.Hand && playerIndex > -1 && playerIndex == _lastState.turn.playerIndex) {
       UnitRenderer unitRenderer = hexLayout.GetUnitRenderer(hex);
       if (unitRenderer == null) {
-        // TODO: Work out why we sometimes get no unit.
         return;
       }
       if (unitRenderer.unitState == _selectedUnit) {
@@ -128,7 +112,6 @@ public class GameController : MonoBehaviour {
     }
 
     void deselectBoardUnit() {
-      Debug.Log("Deselect board unit");
       board.ResetBackgroundHexColor();
       board.GetUnitRenderer(_selectedUnit.coord).SetSelected(false);
       _selectedUnit = null;
@@ -164,13 +147,6 @@ public class GameController : MonoBehaviour {
 
       if (_actionState == ActionState.Summoning) {
         networkController.SendMessageSummon(_selectedUnit.id, hexLayout.layout.HexToDoubledCoord(hex));
-        // var summoner = _lastState.GetSummoner(_lastState.turn.playerIndex);
-        // Hex summonerHex = hexLayout.layout.CoordToHex(summoner.coord);
-        // if (!summonerHex.Neighbors().Any(h => h.Equals(hex))) {
-        //   Debug.Log("Can only summon next to summoner");
-        //   return;
-        // }
-        // _game.Summon(_selectedUnit.id, hex);
         return;
       }
 
@@ -386,35 +362,10 @@ public class GameController : MonoBehaviour {
   }
 
   public void NewGame(GameState gameState) {
-    Debug.Log("@NewGame");
     menuController.HideAll();
     gameGameObject.SetActive(true);
     _startPending = true;
     _lastState = gameState;
-
-    // int layoutsReady = 0;
-    // void handleLayoutComplete(HexLayout2 layout) {
-    //   layout.LayoutCompleted += () => {
-    //     layoutsReady++;
-    //     if (layoutsReady == 5) {
-    //       // _game = new Game(LoadAvailableUnits(), board.layout);
-    //       // _game.StateChanged += Refresh;
-    //       // _game.Start();
-    //       PlaceEnergyIndicators();
-    //       Refresh(gameState);
-    //     }
-    //   };
-    // }
-    // handleLayoutComplete(board);
-    // handleLayoutComplete(p1Hand);
-    // handleLayoutComplete(p1Draw);
-    // handleLayoutComplete(p2Hand);
-    // handleLayoutComplete(p2Draw);
-
-    // NOTE: The c# Game class was created for local / offline play.
-    // _game = new Game(LoadAvailableUnits(), board.layout);
-    // _game.StateChanged += Refresh;
-    // _game.Start();
   }
 
   public void EndGame(GameStats gameStats) {
@@ -429,7 +380,6 @@ public class GameController : MonoBehaviour {
 
   public void SetPlayerIndex(int playerIndex) {
     _currentPlayerIndex = playerIndex;
-    Debug.Log("You are player " + playerIndex);
   }
 
   public void PlaceEnergyIndicators() {
@@ -446,45 +396,4 @@ public class GameController : MonoBehaviour {
       go.transform.position = pos;
     }
   }
-
-#if UNITY_EDITOR
-  [MenuItem("HexGame/Test")]
-  public static void Test() {
-    // var gameController = GameObject.Find("Controllers").GetComponent<GameController>();
-    // var board = GameObject.Find("Board").GetComponent<HexLayout2>();
-    // // var availableUnits = gameController.LoadAvailableUnits();
-    // var state = new UnitState() {
-    //   unit = availableUnits.GetUnits()[0],
-    //   coord = new DoubledCoord(0, 0),
-    // };
-    // board.SpawnUnit(state);
-  }
-
-  [ContextMenu("Test Parse GameState")]
-  public void TestParseGameState() {
-    string state = @"{""units"":[{""id"":0,""player"":1,""coord"":{""col"":0,""row"":2}},{""id"":0,""player"":2,""coord"":{""col"":12,""row"":2}}],""players"":[{""id"":1,""energy"":0,""energyGain"":1,""draw"":[2,4,9,22,11,17,3,18,14,23,24,20,6,7,1,15,5,16,12],""hand"":[19,8,13,21,10],""discard"":[]},{""id"":2,""energy"":0,""energyGain"":1,""draw"":[4,22,5,9,23,20,16,18,13,7,2,1,3,12,11,19,10,15,8],""hand"":[6,21,24,14,17],""discard"":[]}],""turn"":{""player"":0,""stage"":0,""unitsMoved"":[],""unitsAttacked"":[],""summoned"":[]}}";
-    GameState gameState = JsonConvert.DeserializeObject<GameState>(state);
-    Debug.Log("gameState.turn.playerIndex " + gameState.turn.playerIndex);
-    Debug.Log("OK!");
-  }
-
-  [ContextMenu("TestDeserialiseUnitCollection")]
-  public void TestDeserialiseUnitCollection() {
-    string json = "[2, 3, 24, 20, 22]";
-    // UnitCollection uc = JsonConvert.DeserializeObject<UnitCollection>(json);
-    List<UnitId> uc = JsonConvert.DeserializeObject<List<UnitId>>(json);
-
-    // List<Unit>
-  }
-
-  [ContextMenu("TestStringFormat")]
-  public void TestStringFormat() {
-    Debug.Log(@"{""type"": ""bob"", ""name"": ""Aawdjan""}");
-    // Debug.Log(String.Format(
-    //   @"{""type"": ""{1}"", ""name"": ""{2}""}",
-    //   "login",
-    //   "bob"
-    // ));
-  }
-#endif
 }

@@ -50,43 +50,10 @@ namespace HexGame {
       return q + "," + r;
     }
 
-    // public override bool Equals(object obj) {
-    //   if (this == null) {
-    //     return false;
-    //   }
-    //   if (obj == null) {
-    //     return false;
-    //   }
-    //   return this.Equals(obj as Hex);
-    // }
-
     public bool Equals(Hex o) {
-        // if (o is null) {
-        //     return false;
-        // }
-
-        // if (Object.ReferenceEquals(this, o)) {
-        //     return true;
-        // }
-
-        // if (this.GetType() != o.GetType()) {
-        //     return false;
-        // }
-
         return (q == o.q) && (r == o.r);
     }
     
-    // public static bool operator ==(Hex a, Hex b) {
-    //   if (a is null || b is null) {
-    //     return false;
-    //   }
-    //   return a.Equals(b);
-    // }
-
-    // public static bool operator !=(Hex a, Hex b) {
-    //     return !(a == b);
-    // }
-
     public static Hex operator +(Hex a, Hex b) {
       return new Hex(a.q + b.q, a.r + b.r, a.s + b.s);
     }
@@ -151,24 +118,6 @@ namespace HexGame {
       return Subtract(b).Len();
     }
 
-    // TODO: Not sure what this was originally for?!
-    // public Hex Round() {
-    //   var qi = Math.round(q);
-    //   var ri = Math.round(r);
-    //   var si = Math.round(s);
-    //   var q_diff = Math.abs(qi - _q);
-    //   var r_diff = Math.abs(ri - _r);
-    //   var s_diff = Math.abs(si - _s);
-    //   if (q_diff > r_diff && q_diff > s_diff) {
-    //     qi = -ri - si;
-    //   } else if (r_diff > s_diff) {
-    //     ri = -qi - si;
-    //   } else {
-    //     si = -qi - ri;
-    //   }
-    //   return new Hex(qi, ri, si);
-    // }
-
     public Hex Lerp(Hex b, float t) {
       return new Hex(
           Mathf.RoundToInt(q * (1f - t) + b.q * t),
@@ -176,17 +125,5 @@ namespace HexGame {
           Mathf.RoundToInt(s * (1f - t) + b.s * t)
       );
     }
-
-    // public Hex[] Linedraw (Hex b) {
-    //     var N = Distance(b);
-    //     var a_nudge = new Hex(_q + 1e-06, _r + 1e-06, _s - 2e-06);
-    //     var b_nudge = new Hex(b.q + 1e-06, b.r + 1e-06, b.s - 2e-06);
-    //     var results = Array.Empty<Hex>();
-    //     var step = 1.0 / Mathf.Max(N, 1);
-    //     for (var i = 0; i <= N; i++) {
-    //         results += a_nudge.Lerp(b_nudge, step * i).Round();
-    //     }
-    //     return results;
-    // }
   }
 }

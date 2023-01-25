@@ -16,26 +16,13 @@ public class MenuItems : MonoBehaviour {
     public int selectedIndex = 0;
 
     void OnStart() {
-        // SetSelectedMenuItem(selectedIndex);
         foreach(GameObject menuItem in menuItems) {
             MenuItemState state = menuItem.GetComponent<MenuItemState>();
             if (state != null) {
                 state.parentMenu = this;
-                // TODO: Make sure the disabled ones are styled that way. Maybe this is best done within the actual component??
             } 
         }
         SetSelectedMenuItem(selectedIndex);
-    }
-
-    void OnAwake() {
-        // foreach(GameObject menuItem in menuItems) {
-        //     MenuItemState state = menuItem.GetComponent<MenuItemState>();
-        //     if (state != null) {
-        //         state.parentMenu = this;
-        //         // TODO: Make sure the disabled ones are styled that way. Maybe this is best done within the actual component??
-        //     } 
-        // }
-        // SetSelectedMenuItem(selectedIndex);
     }
 
     void OnEnable() {
@@ -54,10 +41,6 @@ public class MenuItems : MonoBehaviour {
 
     void OnDisable() {
         menuInputActions.Disable();
-    }
-
-    void OnMenuItemDisabledChange(GameObject menuItem) {
-        // TODO: if it is now 
     }
 
     void SetSelectedMenuItem(int index) {

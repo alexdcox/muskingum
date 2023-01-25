@@ -129,10 +129,6 @@ public class HexLayout2 : MonoBehaviour {
     _unitGameObjects.Add(unitGameObject);
 
     return unitRenderer;
-
-    // var material = new Material(AssetDatabase.LoadAssetAtPath<Shader>("Assets/Shaders/NewTry.shadergraph"));
-    // material.SetTexture("_Image", unitDefinition.image);
-    // unitGameObject.transform.Find("HexOutline").GetComponent<MeshRenderer>().material = material;
   }
 
   public void RemoveAllUnits() {
@@ -367,12 +363,6 @@ public class HexLayout2 : MonoBehaviour {
     go.AddComponent<MeshCollider>();
 
     return go;
-  }
-
-  [ContextMenu("LetsGetHexy")]
-  void DrawAHexyBoi() {
-    CreateHexMesh(Hex.Axial(-3, 0));
-    CreateHexMesh(Hex.Axial(3, 0));
   }
 
   public int GetPlayerIndex() {

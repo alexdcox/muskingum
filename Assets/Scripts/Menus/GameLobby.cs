@@ -2,11 +2,4 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GameLobby : MonoBehaviour {
-
-
-
-  void Update() {
-
-  }
-}
+public class GameLobby : MonoBehaviour {}

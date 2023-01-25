@@ -9,7 +9,6 @@ namespace HexGame {
     public UnitCollection() { }
 
     public UnitCollection(List<Unit> units) {
-      // TODO: Is this a shallow clone? I think so.
       _units = new List<Unit>(units);
     }
 
@@ -45,12 +44,6 @@ namespace HexGame {
 
     public Unit Find(System.Predicate<Unit> cb) {
       return _units.Find(cb);
-      // foreach(Unit unit in _units) {
-      //   if (cb(unit)) {
-      //     return unit;
-      //   }
-      // }
-      // return null;
     }
 
     public Unit FindById(UnitId id) {
@@ -62,13 +55,10 @@ namespace HexGame {
     }
 
     public UnitCollection Clone() {
-      // TODO: Double check this works as intended or follow:
-      //       https://stackoverflow.com/questions/222598/how-do-i-clone-a-generic-list-in-c
       return new UnitCollection(new List<Unit>(_units));
     }
 
     public List<Unit> GetUnits() {
-      // TODO: Do I need to Clone first?
       return _units.ToList();
     }
     

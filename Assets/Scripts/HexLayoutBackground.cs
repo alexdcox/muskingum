@@ -95,7 +95,6 @@ public class HexLayoutBackground : MonoBehaviour {
       GameObject go = new GameObject("Hex " + hex.ToString()) {
         transform = {
           parent = transform,
-          // position = (Vector3)layout.HexToPixel(hex) + new Vector3(-rect.width / 2, +rect.height / 2, position.z),
         }
       };
       Mesh mesh = new Mesh() {
@@ -131,19 +130,13 @@ public class HexLayoutBackground : MonoBehaviour {
       var width = xMax - xMin;
       var height = yMax - yMin;
 
-      // Debug.Log("xMin " + xMin + " xMax " + xMax + " yMin " + yMin + " yMax " + yMax + " width " + width + " height " + height);
-
       // TODO: Could refactor this to use a "get hex rect" function or something along those lines.
       Rect hexRect = new Rect(xMin, yMin, width, height);
       return rect.Overlaps(hexRect);
     }
 
-    var topRightDirection = 0;
     var bottomRightDirection = 1;
     var downDirection = 2;
-    var bottomLeftDirection = 3;
-    var topLeftDirection = 4;
-    var upDirection = 5;
 
     int[] directionPattern = new int[] {
       downDirection, // 0
@@ -154,12 +147,8 @@ public class HexLayoutBackground : MonoBehaviour {
     };
     var currentDirectionIndex = 0;
 
-    // Hex currentHex = null;
-
     var infiniteLoopEscaper = 0;
     var infiniteEscapeAt = 100;
-
-    // q is bottom right diagonal
 
     Hex[] starters = new Hex[] {
       Hex.Axial(0, 0),
@@ -198,161 +187,6 @@ public class HexLayoutBackground : MonoBehaviour {
         color = colorLight;
       }
       Hex currentHex = hex;
-      // Debug.Log("starting from " + currentHex.ToString());
-      currentDirectionIndex = patternage[currentHexIndex];
-      currentHexIndex++;
-      while(IsHexVisible(currentHex)) {
-        DrawHex(currentHex);
-        currentHex = currentHex.Neighbor(directionPattern[currentDirectionIndex]);
-        currentDirectionIndex = (currentDirectionIndex + 1) % 5;
-        infiniteLoopEscaper++;
-        if (infiniteLoopEscaper > infiniteEscapeAt) {
-          return;
-        }
-      }
-    }
-
-    // DrawHex(Hex.Axial(0, 0));
-  }
-
-  void OnDrawGizmos() {
-    return;
-    
-    if (transform == null)
-      return;
-
-    Gizmos.color = Color.green;
-    var position = transform.position;
-
-    var rectTransform = GetComponent<RectTransform>();
-    if (rectTransform == null) {
-      return;
-    }
-
-    var rect = Util.GetRectTransformRect(rectTransform);
-    if (rect.width == 0 || rect.height == 0) {
-      return;
-    }
-
-    // Debug.Log("----------------------------------------------------------");
-
-    Vector3 topLeft = new Vector3(rect.xMin, rect.yMax, position.z);
-    Vector3 topRight = new Vector3(rect.xMax, rect.yMax, position.z);
-    Vector3 bottomRight = new Vector3(rect.xMax, rect.yMin, position.z);
-    Vector3 bottomLeft = new Vector3(rect.xMin, rect.yMin, position.z);
-
-    float desiredVerticalHexagons = 5.6f;
-
-    _hexDimensions = new HexDimensions() { SideToSide = rect.height / desiredVerticalHexagons };
-
-    float size = size = _hexDimensions.CenterToVertex;
-    Layout layout = new Layout(Orientation.Flat, new Vector2(size, size), topLeft);
-    layout.spacing = 0.00f;
-
-    Gizmos.DrawLine(bottomLeft, topRight);
-
-    void DrawHex(Hex hex) {
-      if (hex == null) {
-        return;
-      }
-      var hexCorners = layout.PolygonCorners(hex);
-      Vector3 midpoint = layout.HexToPixel(hex);
-      midpoint += position;
-      for (var i = 0; i < 6; i++) {
-        Vector3 from = (i == 0 ? hexCorners[5] : hexCorners[i - 1]) + position;
-        Vector3 to = hexCorners[i] + position;
-        Gizmos.DrawLine(from, to);
-        // if (debugShowMidpoint) {
-        //   Gizmos.DrawLine(midpoint, to);
-        // }
-      }
-    }
-
-    bool IsHexVisible(Hex hex) {
-      Vector3[] corners = layout.PolygonCorners(hex);
-      float xMin = corners[0].x, xMax = corners[0].x, yMin = corners[0].y, yMax = corners[0].y;
-      foreach (Vector3 corner in corners) {
-        xMin = Math.Min(xMin, corner.x);
-        xMax = Math.Max(xMax, corner.x);
-        yMin = Math.Min(yMin, corner.y);
-        yMax = Math.Max(yMax, corner.y);
-      }
-
-      var width = xMax - xMin;
-      var height = yMax - yMin;
-
-      // Debug.Log("xMin " + xMin + " xMax " + xMax + " yMin " + yMin + " yMax " + yMax + " width " + width + " height " + height);
-
-      // TODO: Could refactor this to use a "get hex rect" function or something along those lines.
-      Rect hexRect = new Rect(xMin, yMin, width, height);
-      return rect.Overlaps(hexRect);
-    }
-
-    // var topRightDirection = 0;
-    var bottomRightDirection = 1;
-    var downDirection = 2;
-    var bottomLeftDirection = 3;
-    var topLeftDirection = 4;
-    var upDirection = 5;
-
-    int[] directionPattern = new int[] {
-      downDirection, // 0
-      bottomRightDirection, // 1
-      bottomRightDirection, // 2
-      downDirection, // 3
-      bottomRightDirection, // 4
-    };
-    var currentDirectionIndex = 0;
-
-    // Hex currentHex = null;
-
-    var infiniteLoopEscaper = 0;
-    var infiniteEscapeAt = 100;
-
-    // q is bottom right diagonal
-
-    Hex[] starters = new Hex[] {
-      Hex.Axial(0, 0),
-      Hex.Axial(1, -1),
-      Hex.Axial(2, -1),
-      Hex.Axial(4, -2),
-      Hex.Axial(6, -3),
-      Hex.Axial(7, -4),
-      Hex.Axial(8, -4),
-      Hex.Axial(10, -5),
-      Hex.Axial(11, -6),
-      Hex.Axial(0, -5),
-      Hex.Axial(0, -3),
-      Hex.Axial(0, -2),
-    };
-
-    int[] patternage = new int[] {
-      0,
-      1,
-      1,
-      2,
-      3,
-      4,
-      4,
-      0,
-      1,
-      0,
-      3,
-      2,
-    };
-
-    Gizmos.color = Color.yellow;
-    DrawHex(Hex.Axial(4, -2));
-
-    var currentHexIndex = 0;
-    foreach (Hex hex in starters) {
-      if (currentHexIndex % 2 == 0) {
-        Gizmos.color = Color.black;
-      } else {
-        Gizmos.color = Color.white;
-      }
-      Hex currentHex = hex;
-      // Debug.Log("starting from " + currentHex.ToString());
       currentDirectionIndex = patternage[currentHexIndex];
       currentHexIndex++;
       while(IsHexVisible(currentHex)) {
@@ -366,9 +200,4 @@ public class HexLayoutBackground : MonoBehaviour {
       }
     }
   }
-
-  // [ContextMenu("LetsGetHexy")]
-  // void DrawAHexyBoi() {
-  //   CreateHexMesh(Hex.Axial(0, 0));
-  // }
 }

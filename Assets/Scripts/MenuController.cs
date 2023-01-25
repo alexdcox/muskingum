@@ -60,11 +60,6 @@ public class MenuController : MonoBehaviour {
       return;
     }
 
-    // GameObject loadedScreen = GetScreenGameObjectFromEnum(loadedScreenIndex);
-    // if (loadedScreen != null) {
-    //     loadedScreen.SetActive(false);
-    // }
-
     HideAll();
 
     if (nextScreen != null) {
@@ -73,11 +68,6 @@ public class MenuController : MonoBehaviour {
 
     currentScreenIndex = screenIndex;
     loadedScreenIndex = screenIndex;
-  }
-
-  // Start is called before the first frame update
-  void Start() {
-    // LoadScreen(currentScreenIndex);
   }
 
   void OnValidate() {
