@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3839b40884e84a828ed11ee85686d7f0, type: 3}
   m_Name: Moloch
   m_EditorClassIdentifier: 
+  id: 21
   name: Moloch
   image: {fileID: 2800000, guid: 17caa5ae497c84ae28daa73ca252b250, type: 3}
   cost: 6

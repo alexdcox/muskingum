@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3839b40884e84a828ed11ee85686d7f0, type: 3}
   m_Name: Firedancer
   m_EditorClassIdentifier: 
+  id: 12
   name: Firedancer
   image: {fileID: 2800000, guid: 21a7bf94d3b70465fa56dacbf55c810d, type: 3}
   cost: 2

@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3839b40884e84a828ed11ee85686d7f0, type: 3}
   m_Name: Vulcan
   m_EditorClassIdentifier: 
+  id: 24
   name: Vulcan
   image: {fileID: 2800000, guid: 4e3e379e21045428ca53c071f3ada5a3, type: 3}
   cost: 4

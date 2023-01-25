@@ -25,6 +25,10 @@ public class HexLayout2 : MonoBehaviour {
 
   public GameController gameController;
 
+  private GameObject unitPrefab;
+  private Shader blockColorShader;
+  private Shader newTryShader;
+
   [HideInInspector] public Layout layout;
   [HideInInspector] public Vector3 centerTranslate;
 
@@ -40,29 +44,32 @@ public class HexLayout2 : MonoBehaviour {
 
   public class LayoutKind {
     public static readonly Vector2Int[] Board = {
-            new(-3, 0), new(-2, 0), new(-1, 0), new(0, 0), new(1, 0),
-            new(2, 0), new(3, 0), new(-2, 0), new(-1, 0), new(0, 0),
-            new(1, 0), new(2, 0), new(3, 0), new(-3, 1), new(-2, 1),
-            new(-1, 1), new(0, 1), new(1, 1), new(2, 1), new(-3, 2),
-            new(-2, 2), new(-1, 2), new(0, 2), new(1, 2), new(0, -1),
-            new(-1, -1), new(-2, -1), new(1, -1), new(2, -1), new(3, -1),
-            new(0, -2), new(-1, -2), new(1, -2), new(2, -2), new(3, -2),
-        };
+      new(-3, 0), new(-2, 0), new(1, 0), new(2, 0), new(3, 0), new(0, 0),
+      new(-3, 1), new(-2, 1), new(-1, 1), new(0, 1), new(1, 1), new(2, 1),
+      new(-3, 2), new(-2, 2), new(-1, 2), new(0, 2), new(1, 2), new(0, -1),
+      new(-1, -1), new(-2, -1), new(1, -1), new(2, -1), new(3, -1), new(0, -2),
+      new(-1, -2), new(1, -2), new(2, -2), new(3, -2), new(-1, 0)
+    };
     public static readonly Vector2Int[] Hand = {
-            new(0, 0), new(0, 1), new(1, 0), new(1, 1), new(2, 0),
-        };
+      new(0, 0), new(0, 1), new(1, 0), new(1, 1), new(2, 0),
+    };
     public static readonly Vector2Int[] LeftDeck = {
-            new(0, 0),  new(1, 0),  new(1, -1),  new(2, -1),  new(1, -2),  new(2, -2),
-            new(2, -3), new(3, -3), new(2, -4),  new(3, -4),  new(3, -5),  new(4, -5),
-            new(3, -6), new(4, -6), new(4, -7),  new(5, -7),  new(4, -8),  new(5, -8),
-            new(5, -9), new(6, -9), new(5, -10), new(6, -10), new(6, -11), new(7, -11),
-        };
+      new(0, 0),  new(1, 0),  new(1, -1),  new(2, -1),  new(1, -2),  new(2, -2),
+      new(2, -3), new(3, -3), new(2, -4),  new(3, -4),  new(3, -5),  new(4, -5),
+      new(3, -6), new(4, -6), new(4, -7),  new(5, -7),  new(4, -8),  new(5, -8),
+      new(5, -9), new(6, -9), new(5, -10), new(6, -10), new(6, -11), new(7, -11),
+    };
     public static readonly Vector2Int[] RightDeck = {
-            new(0, 0),  new(1, 0),  new(0, -1),  new(1, -1),  new(1, -2),  new(2, -2),
-            new(1, -3), new(2, -3), new(2, -4),  new(3, -4),  new(2, -5),  new(3, -5),
-            new(3, -6), new(4, -6), new(3, -7),  new(4, -7),  new(4, -8),  new(5, -8),
-            new(4, -9), new(5, -9), new(5, -10), new(6, -10), new(5, -11), new(6, -11),
-        };
+      new(0, 0),  new(1, 0),  new(0, -1),  new(1, -1),  new(1, -2),  new(2, -2),
+      new(1, -3), new(2, -3), new(2, -4),  new(3, -4),  new(2, -5),  new(3, -5),
+      new(3, -6), new(4, -6), new(3, -7),  new(4, -7),  new(4, -8),  new(5, -8),
+      new(4, -9), new(5, -9), new(5, -10), new(6, -10), new(5, -11), new(6, -11),
+    };
+  }
+
+  void Start() {
+    blockColorShader = gameController.blockColorShader;
+    newTryShader = gameController.newTryShader;
   }
 
   void Awake() {
@@ -79,16 +86,20 @@ public class HexLayout2 : MonoBehaviour {
     bool ok = Layout();
     if (!_hasInit && ok) {
       _hasInit = true;
-      LayoutCompleted?.Invoke();
       InstantiateBackgroundHexagons();
+      LayoutCompleted?.Invoke();
     }
+  }
+
+  public bool HasInit() {
+    return _hasInit;
   }
 
   void InstantiateBackgroundHexagons() {
     foreach (Hex hex in GetHexes()) {
       GameObject hexGameObject = CreateHexMesh(hex);
       hexGameObject.name = String.Format("Bg Hex {0}", hex.ToString());
-      var material = new Material(AssetDatabase.LoadAssetAtPath<Shader>("Assets/Shaders/BlockColor.shadergraph"));
+      var material = new Material(blockColorShader);
       material.SetColor("_Color", backgroundHexColor);
       hexGameObject.GetComponent<MeshRenderer>().material = material;
       _backgroundHexes.Add(hexGameObject);
@@ -96,10 +107,12 @@ public class HexLayout2 : MonoBehaviour {
   }
 
   public UnitRenderer SpawnUnit(UnitState unitState) {
-    var unitPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Unit2.prefab");
+    if (!_hasInit) {
+      return null;
+    }
 
-    GameObject unitGameObject = Instantiate(unitPrefab, transform);
-    unitGameObject.transform.position = (Vector3)layout.HexToPixel(unitState.hex) + transform.position + centerTranslate + new Vector3(0, 0, -5);
+    GameObject unitGameObject = Instantiate(gameController.unitPrefab, transform);
+    unitGameObject.transform.position = (Vector3)layout.CoordToPixel(unitState.coord) + transform.position + centerTranslate + new Vector3(0, 0, -5);
 
     Transform hexOutline = unitGameObject.transform.Find("HexOutline");
     var hexBounds = hexOutline.GetComponent<MeshRenderer>().bounds;
@@ -110,7 +123,7 @@ public class HexLayout2 : MonoBehaviour {
 
     var unitRenderer = unitGameObject.GetComponent<UnitRenderer>();
     unitRenderer.unitState = unitState;
-    unitRenderer.unitDefinition = gameController.GetUnitDefinition(unitState.unit);
+    unitRenderer.unitDefinition = gameController.GetUnitDefinition(unitState.id);
     unitRenderer.Render();
 
     _unitGameObjects.Add(unitGameObject);
@@ -350,7 +363,7 @@ public class HexLayout2 : MonoBehaviour {
     mesh.RecalculateNormals();
     mesh.RecalculateTangents();
     go.AddComponent<MeshFilter>().mesh = mesh;
-    go.AddComponent<MeshRenderer>().material = new Material(AssetDatabase.LoadAssetAtPath<Shader>("Assets/Shaders/NewTry.shadergraph"));
+    go.AddComponent<MeshRenderer>().material = new Material(newTryShader);
     go.AddComponent<MeshCollider>();
 
     return go;
@@ -362,7 +375,7 @@ public class HexLayout2 : MonoBehaviour {
     CreateHexMesh(Hex.Axial(3, 0));
   }
 
-  public int GetPlayerNumber() {
+  public int GetPlayerIndex() {
     if (name.Contains("P1")) {
       return 0;
     }
@@ -372,10 +385,15 @@ public class HexLayout2 : MonoBehaviour {
     return -1;
   }
 
+  public UnitRenderer GetUnitRenderer(DoubledCoord coord) {
+    return GetUnitRenderer(layout.CoordToHex(coord));
+  }
+
   public UnitRenderer GetUnitRenderer(Hex hex) {
     foreach (var unitGO in _unitGameObjects) {
       var unitRenderer = unitGO.GetComponent<UnitRenderer>();
-      if (unitRenderer.unitState.hex.Equals(hex)) {
+      var unitHex = layout.CoordToHex(unitRenderer.unitState.coord);
+      if (unitHex.Equals(hex)) {
         return unitRenderer;
       }
     }

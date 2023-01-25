@@ -12,26 +12,27 @@ using HexGame;
 public class InputController : MonoBehaviour {
     public GameController gameController;
 
-    InputActions _inputActions;
+    GameInputActions _inputActions;
 
     HexLayout2 _lastMouseInLayout = null;
     Hex _lastMouseInHex = null;
 
     void Start() {
-        _inputActions = new InputActions();
+        _inputActions = new GameInputActions();
         _inputActions.Mouse.Enable();
         _inputActions.Mouse.MousePosition.performed += OnMouseMove;
         _inputActions.Mouse.MouseClick.performed += OnMouseClick;
+        _inputActions.Mouse.EnterPress.performed += OnEnterPress;
 
     }
 
-    // void OnEnable() {
-    //     _inputActions.Mouse.Enable();
-    // }
+    void OnEnable() {
+        _inputActions.Mouse.Enable();
+    }
 
-    // void OnDisable() {
-    //     _inputActions.Mouse.Disable();
-    // }
+    void OnDisable() {
+        _inputActions.Mouse.Disable();
+    }
 
     void OnMouseMove (InputAction.CallbackContext ctx) {
         (HexLayout2 hexLayout, Hex hex) = RaycastForHex(ctx);
@@ -67,6 +68,10 @@ public class InputController : MonoBehaviour {
         if (hexLayout != null && hex != null) {
             gameController.OnHexClicked(hexLayout, hex);
         }
+    }
+
+    void OnEnterPress(InputAction.CallbackContext ctx) {
+      gameController.SkipTurn();
     }
 
     (HexLayout2 hexLayout, Hex hex) RaycastForHex(InputAction.CallbackContext ctx) {

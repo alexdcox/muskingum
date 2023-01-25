@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3839b40884e84a828ed11ee85686d7f0, type: 3}
   m_Name: Sun Reaver
   m_EditorClassIdentifier: 
+  id: 23
   name: Sun Reaver
   image: {fileID: 2800000, guid: 0a07a2056f55f4b4598d9481ff5adc6b, type: 3}
   cost: 4

@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3839b40884e84a828ed11ee85686d7f0, type: 3}
   m_Name: Nomad
   m_EditorClassIdentifier: 
+  id: 2
   name: Nomad
   image: {fileID: 2800000, guid: 1495fa7c52fc141008ec1b95b92cd379, type: 3}
   cost: 1

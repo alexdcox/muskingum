@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3839b40884e84a828ed11ee85686d7f0, type: 3}
   m_Name: Giant Slayer
   m_EditorClassIdentifier: 
+  id: 14
   name: Giant Slayer
   image: {fileID: 2800000, guid: 4ba97e491ce54449b87db75a5313fa9a, type: 3}
   cost: 3

@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3839b40884e84a828ed11ee85686d7f0, type: 3}
   m_Name: Scavenger
   m_EditorClassIdentifier: 
+  id: 7
   name: Scavenger
   image: {fileID: 2800000, guid: 3e922313f5eec44cc86b546b8f4526e7, type: 3}
   cost: 3

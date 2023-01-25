@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3839b40884e84a828ed11ee85686d7f0, type: 3}
   m_Name: Magma Fiend
   m_EditorClassIdentifier: 
+  id: 17
   name: Magma Fiend
   image: {fileID: 2800000, guid: 85c32a58fbcc247ebb85195cf09f3139, type: 3}
   cost: 5

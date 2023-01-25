@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3839b40884e84a828ed11ee85686d7f0, type: 3}
   m_Name: Skyfire Drake
   m_EditorClassIdentifier: 
+  id: 22
   name: Skyfire Drake
   image: {fileID: 2800000, guid: 983bc9c19a3944363b80226332d86e81, type: 3}
   cost: 4

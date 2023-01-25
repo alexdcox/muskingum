@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3839b40884e84a828ed11ee85686d7f0, type: 3}
   m_Name: Magma Hurler
   m_EditorClassIdentifier: 
+  id: 18
   name: Magma Hurler
   image: {fileID: 2800000, guid: 69b97b05eeeb04781b57343792ff241d, type: 3}
   cost: 3

@@ -19,6 +19,10 @@ namespace HexGame {
       this.origin = origin;
     }
 
+    public Vector2 CoordToPixel(DoubledCoord c) {
+      return HexToPixel(CoordToHex(c));
+    }
+
     public Vector2 HexToPixel(Hex h) {
       var M = orientation;
       var x = (M.f0 * h.q + M.f1 * h.r) * size.x;

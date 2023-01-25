@@ -1,5 +1,5 @@
 {
-    "name": "InputActions",
+    "name": "GameInputActions",
     "maps": [
         {
             "name": "Mouse",
@@ -22,6 +22,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
+                },
+                {
+                    "name": "EnterPress",
+                    "type": "Button",
+                    "id": "8ed26c97-ff99-406b-87c8-f01efb7552ae",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -44,6 +53,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "MousePosition",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "25768541-68bd-4ff8-8094-918e9e9c3637",
+                    "path": "<Keyboard>/enter",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "EnterPress",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

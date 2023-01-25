@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3839b40884e84a828ed11ee85686d7f0, type: 3}
   m_Name: Emberstrike
   m_EditorClassIdentifier: 
+  id: 6
   name: Emberstrike
   image: {fileID: 2800000, guid: c06e17b2e0a014f97954ac56f44661f1, type: 3}
   cost: 5

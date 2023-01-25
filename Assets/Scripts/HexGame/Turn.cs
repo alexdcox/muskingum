@@ -2,9 +2,10 @@ using System.Collections.Generic;
 
 namespace HexGame {
   public class TurnState {
-    public int playerNum = -1;
-    public List<Hex> unitsMoved = new();
-    public List<Hex> unitsAttacked = new();
-    public List<Hex> unitsSummoned = new();
+    public List<UnitState> summoned = new();
+    public int playerIndex = -1;
+    public List<DoubledCoord> unitsMoved = new();
+    public List<DoubledCoord> unitsAttacked = new();
+    public List<DoubledCoord> unitsSummoned = new();
   }
 }

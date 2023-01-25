@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3839b40884e84a828ed11ee85686d7f0, type: 3}
   m_Name: Magma Spore
   m_EditorClassIdentifier: 
+  id: 19
   name: Magma Spore
   image: {fileID: 2800000, guid: 0023836a5cfe941c08188a2c07432eba, type: 3}
   cost: 2

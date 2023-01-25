@@ -7,12 +7,15 @@ namespace HexGame {
     public List<PlayerState> players;
     public TurnState turn;
 
-    public UnitState GetSummoner(int playerNum) {
-      return units.Find(unitState => unitState.playerNum == playerNum && unitState.unit.HasId(UnitId.Summoner));
+    public UnitState GetSummoner(int playerIndex) {
+      return units.Find(unitState => unitState.playerIndex == playerIndex && unitState.id == UnitId.Summoner);
     }
 
     public PlayerState Player() {
-      return players[turn.playerNum];
+      if (turn.playerIndex < 0 || turn.playerIndex > players.Count - 1) {
+        return null;
+      }
+      return players[turn.playerIndex];
     }
   }
 }

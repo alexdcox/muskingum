@@ -1,0 +1,74 @@
+{
+    "name": "MenuInputActions",
+    "maps": [
+        {
+            "name": "Main",
+            "id": "bfd937e4-a7bc-481d-a0b2-3b8f3a9b7b76",
+            "actions": [
+                {
+                    "name": "Down",
+                    "type": "Button",
+                    "id": "cfa6a37a-ab25-4a68-8cf7-2451dd264357",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Up",
+                    "type": "Button",
+                    "id": "d6e28d7e-1e67-40cf-b03e-281a958831e0",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Select",
+                    "type": "Button",
+                    "id": "e0ca51da-9469-44f4-bf9d-c4eae956d0b2",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "85e68dca-7c4c-45ad-ae7c-5cebd8f5c05d",
+                    "path": "<Keyboard>/downArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Down",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "13c622ab-e86d-4e4f-9031-8064a7ea5b52",
+                    "path": "<Keyboard>/upArrow",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Up",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c36bfb6c-8fd7-4d07-a6f3-49409cec8fad",
+                    "path": "<Keyboard>/enter",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Select",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

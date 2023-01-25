@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3839b40884e84a828ed11ee85686d7f0, type: 3}
   m_Name: Fire Worm
   m_EditorClassIdentifier: 
+  id: 11
   name: Fire Worm
   image: {fileID: 2800000, guid: adefe15501a6e49fab753213b8f9e8de, type: 3}
   cost: 6

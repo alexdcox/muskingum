@@ -17,13 +17,13 @@ public class BlockColor : MonoBehaviour {
         // perhaps I need to have a play around here.
 
         var meshRenderer = GetComponentInChildren<MeshRenderer>();
-        if (meshRenderer != null && meshRenderer.material != null) {
-            meshRenderer.material.color = color;
+        if (meshRenderer != null && meshRenderer.sharedMaterial != null) {
+            meshRenderer.sharedMaterial.color = color;
         }
 
         var spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-        if (spriteRenderer != null && spriteRenderer.material != null) {
-            spriteRenderer.material.color = color;
+        if (spriteRenderer != null && spriteRenderer.sharedMaterial != null) {
+            spriteRenderer.sharedMaterial.color = color;
         }
     }
 }

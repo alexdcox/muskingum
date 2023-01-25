@@ -32,12 +32,14 @@ public class Util : MonoBehaviour {
     Gizmos.DrawLine(new Vector3(rect.xMin, rect.yMin, z), new Vector3(rect.xMin, rect.yMax, z));
   }
 
+  #if UNITY_EDITOR
   public static List<T> GetAllInstances<T>() where T : ScriptableObject {
     return AssetDatabase.FindAssets($"t: {typeof(T).Name}").ToList()
       .Select(AssetDatabase.GUIDToAssetPath)
       .Select(AssetDatabase.LoadAssetAtPath<T>)
       .ToList();
   }
+  #endif
 }
 
 static class MyExtensions {

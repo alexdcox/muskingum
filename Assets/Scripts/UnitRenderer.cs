@@ -27,36 +27,36 @@ public class UnitRenderer : MonoBehaviour {
   }
 
   public void OnValidate() {
-    if (unitDefinition != null) {
-      unitState = new(){
-        unit = new Unit() {
-          name = unitDefinition.name,
-          cost = unitDefinition.cost,
-          damage = unitDefinition.damage,
-          health = unitDefinition.health,
-          speed = unitDefinition.speed,
-        },
-      };
-    }
+    // if (unitDefinition != null) {
+    //   unitState = new(){
+    //     unit = new Unit() {
+    //       name = unitDefinition.name,
+    //       cost = unitDefinition.cost,
+    //       damage = unitDefinition.damage,
+    //       health = unitDefinition.health,
+    //       speed = unitDefinition.speed,
+    //     },
+    //   };
+    // }
     Render();
-    Debug.Log("@OnValidate");
+    // Debug.Log("@OnValidate");
   }
 
   public void Render() {
     if (unitState == null) {
-      Debug.Log("-unitState");
+      // Debug.Log("no unitState, cannot render player color");
       return;
     };
     if (unitDefinition == null) {
-      Debug.Log("-unitDefinition");
+      // Debug.Log("-unitDefinition");
       return;
     };
     if (hexShader == null) {
-      Debug.Log("-hexShader");
+      // Debug.Log("-hexShader");
       return;
     };
 
-    switch (unitState.playerNum) {
+    switch (unitState.playerIndex) {
       case 1:
         _border = Color.blue;
         _fill = new Color(0f, 0f, 0.6f);
@@ -94,25 +94,25 @@ public class UnitRenderer : MonoBehaviour {
 
     Transform cost = transform.Find("Cost");
     SetCircleColors(cost);
-    if (unitState.unit.cost == 0) {
+    if (unitDefinition.cost == 0) {
       cost.gameObject.SetActive(false);
     } else {
       cost.gameObject.SetActive(true);
-      cost.Find("CostText").GetComponent<TMP_Text>().text = unitState.unit.cost.ToString();
+      cost.Find("CostText").GetComponent<TMP_Text>().text = unitDefinition.cost.ToString();
     }
 
     Transform nameText = transform.Find("NameText");
-    nameText.GetComponent<TMP_Text>().text = unitState.unit.name;
+    nameText.GetComponent<TMP_Text>().text = unitDefinition.name;
 
     Transform damageText = transform.Find("DamageText");
-    damageText.GetComponent<TMP_Text>().text = unitState.unit.damage.ToString();
+    damageText.GetComponent<TMP_Text>().text = unitDefinition.damage.ToString();
 
     Transform healthText = transform.Find("HealthText");
-    healthText.GetComponent<TMP_Text>().text = unitState.unit.health.ToString();
+    healthText.GetComponent<TMP_Text>().text = unitDefinition.health.ToString();
 
     Transform healthRemaining = transform.Find("HealthRemaining");
     SetCircleColors(healthRemaining);
-    if (unitState.remainingHealth < unitState.unit.health) {
+    if (unitState.remainingHealth < unitDefinition.health) {
       healthRemaining.gameObject.SetActive(true);
       healthRemaining.transform.Find("RemainingText").GetComponent<TMP_Text>().text = unitState.remainingHealth.ToString();
     } else {
@@ -120,7 +120,7 @@ public class UnitRenderer : MonoBehaviour {
     }
 
     Transform speedText = transform.Find("SpeedText");
-    speedText.GetComponent<TMP_Text>().text = unitState.unit.speed.ToString();
+    speedText.GetComponent<TMP_Text>().text = unitDefinition.speed.ToString();
 
     var overlay = transform.Find("Overlay");
     if (showOverlay) {

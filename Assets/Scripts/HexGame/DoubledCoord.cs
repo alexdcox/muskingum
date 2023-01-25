@@ -16,6 +16,10 @@ namespace HexGame {
       return new DoubledCoord(col, row);
     }
 
+    public Hex ToHexUsingLayout(Layout layout) {
+      return layout.CoordToHex(this);
+    }
+
     public Hex QDoubledToCube() {
       int q = col;
       int r = (row - col) / 2;
