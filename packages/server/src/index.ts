@@ -7,32 +7,39 @@ const port = 3030
 
 const gameServer = new GameServer()
 
-const wsServer = new WebSocketServer({ noServer: true });
+const wsServer = new WebSocketServer({noServer: true});
 
 wsServer.on('connection', (socket) => {
   gameServer.handleConnectionOpened(socket)
-    socket.on('message', (message: Buffer) => {
-        const json = JSON.parse(message.toString('utf-8'))
-        gameServer.handleMessage(json, socket)
-    });
-});
-
-wsServer.on('close', (socket: WebSocket) => {
+  socket.on('close', () => {
     console.log('[server] Websocket closed')
+    gameServer.handleConnectionClosed(socket)
+  })
+  socket.on('message', (message: Buffer) => {
+    let json = ''
+    try {
+      json = JSON.parse(message.toString('utf-8'))
+    } catch (e) {
+      console.log('Dropping invalid json message: ' + message.toString('utf-8'))
+    }
+    if (json !== '') {
+      gameServer.handleMessage(json, socket)
+    }
+  });
 });
 
 const server = app.listen(port, () => {
-    console.log(`[server] Example app listening on port ${port}`)
+  console.log(`[server] Example app listening on port ${port}`)
 })
 
 server.on('upgrade', (request, socket, head) => {
-    const ip = request.socket.remoteAddress;
-    console.log('[server] New websocket connection', ip)
-    // gameServer.newConnection()
+  const ip = request.socket.remoteAddress;
+  console.log('[server] New websocket connection', ip)
+  // gameServer.newConnection()
 
-    wsServer.handleUpgrade(request, socket, head, (socket2: any) => {
-        wsServer.emit('connection', socket2, request);
-    });
+  wsServer.handleUpgrade(request, socket, head, (socket2: any) => {
+    wsServer.emit('connection', socket2, request);
+  });
 });
 
 

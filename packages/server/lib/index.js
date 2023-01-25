@@ -7,13 +7,22 @@ const gameServer = new GameServer();
 const wsServer = new WebSocketServer({ noServer: true });
 wsServer.on('connection', (socket) => {
     gameServer.handleConnectionOpened(socket);
-    socket.on('message', (message) => {
-        const json = JSON.parse(message.toString('utf-8'));
-        gameServer.handleMessage(json, socket);
+    socket.on('close', () => {
+        console.log('[server] Websocket closed');
+        gameServer.handleConnectionClosed(socket);
     });
-});
-wsServer.on('close', (socket) => {
-    console.log('[server] Websocket closed');
+    socket.on('message', (message) => {
+        let json = '';
+        try {
+            json = JSON.parse(message.toString('utf-8'));
+        }
+        catch (e) {
+            console.log('Dropping invalid json message: ' + message.toString('utf-8'));
+        }
+        if (json !== '') {
+            gameServer.handleMessage(json, socket);
+        }
+    });
 });
 const server = app.listen(port, () => {
     console.log(`[server] Example app listening on port ${port}`);

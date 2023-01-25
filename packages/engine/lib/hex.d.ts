@@ -21,6 +21,7 @@ export declare class Hex {
     rotateRight(): Hex;
     static direction(direction: number): Hex;
     neighbor(direction: number): Hex;
+    neighbors(): Hex[];
     diagonalNeighbor(direction: number): Hex;
     len(): number;
     distance(b: Hex): number;

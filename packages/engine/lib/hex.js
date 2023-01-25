@@ -70,6 +70,9 @@ export class Hex {
     neighbor(direction) {
         return this.add(Hex.direction(direction));
     }
+    neighbors() {
+        return Hex.directions.map(direction => this.add(direction));
+    }
     diagonalNeighbor(direction) {
         return this.add(Hex.diagonals[direction]);
     }

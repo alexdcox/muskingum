@@ -83,8 +83,12 @@ export class Hex {
     return Hex.directions[direction];
   }
 
-  neighbor(direction: number) {
+  neighbor(direction: number): Hex {
     return this.add(Hex.direction(direction));
+  }
+
+  neighbors(): Hex[] {
+    return Hex.directions.map(direction => this.add(direction))
   }
 
   diagonalNeighbor(direction: number) {

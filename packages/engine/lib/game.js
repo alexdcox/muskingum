@@ -3,11 +3,11 @@ import { DoubledCoord } from "./hex.js";
 import { Player } from "./player.js";
 import { EventEmitter } from "events";
 export const EnergyCoords = [
+    [new DoubledCoord(-3, 1), 1],
+    [new DoubledCoord(-3, -1), 1],
     [new DoubledCoord(3, 1), 1],
-    [new DoubledCoord(3, 3), 1],
-    [new DoubledCoord(9, 1), 1],
-    [new DoubledCoord(9, 3), 1],
-    [new DoubledCoord(6, 2), 2],
+    [new DoubledCoord(3, -1), 1],
+    [new DoubledCoord(0, 0), 2],
 ];
 class Connection {
     socket;
@@ -17,64 +17,101 @@ class Connection {
 }
 export class GameServer {
     connections = [];
-    game;
+    games = [];
+    registeredPlayers = [];
+    combatantQueue = [];
     constructor() {
         console.log('New game server 😊!');
     }
     handleConnectionOpened(socket) {
-        if (this.connections.length == 2) {
-            console.log('Player 3 is bringing down the house');
-            for (const connection of this.connections) {
-                connection.socket.close();
-            }
-            this.connections = [];
-        }
         const connection = new Connection(socket);
-        connection.socket.player = this.connections.length + 1;
+        const player = new Player("<unregistered>");
+        connection.socket.player = player;
         this.connections.push(connection);
-        console.log('New websocket connection from player', this.connections.length);
-        socket.send(JSON.stringify({ type: 'playerid', id: this.connections.length }));
-        if (this.connections.length == 2) {
-            console.log('2 players connected, starting game');
-            this.startGame();
+        console.log('New websocket connection', this.connections.length);
+        socket.send(JSON.stringify({ type: 'playerid', id: player.id }));
+    }
+    handleConnectionClosed(socket) {
+        const queueIndex = this.combatantQueue.findIndex(p => p.id === socket.player.id);
+        if (queueIndex) {
+            console.log('Queued player dropped out');
+            console.log('queued players before: ', this.combatantQueue.length);
+            this.combatantQueue.splice(queueIndex, 1);
+            console.log('queued players after: ', this.combatantQueue.length);
         }
+        console.log('server conns before: ', this.connections.length);
+        this.connections = this.connections.filter(c => c.socket != socket);
+        console.log('server conns after: ', this.connections.length);
     }
     handleMessage(message, socket) {
         console.log('handle message', message);
         switch (message.type) {
             case 'login':
-                console.log("Logging in user:", message.name);
-                break;
+                if (message.id) {
+                    console.log('Received login message with id, selecting existing user');
+                    const player = this.registeredPlayers.find(p => p.id = message.id && p.name == message.name);
+                    if (!player) {
+                        console.log('Unable to find registered player ', message.name, 'with id', message.id);
+                        return;
+                    }
+                    socket.player = player;
+                }
+                else {
+                    // TODO: Restore this existing name validation
+                    // const existingPlayer = this.registeredPlayers.find(p => p.name.toLowerCase().trim() == message.name.toLowerCase().trim())
+                    // if (existingPlayer) {
+                    //   console.log('A player has already reserved this name')
+                    //   return
+                    // }
+                    console.log("Received new login for user: ", message.name);
+                    socket.player.name = message.name.trim();
+                    this.registeredPlayers.push(socket.player);
+                }
+                console.log('combatants waiting: ' + this.combatantQueue.length);
+                this.combatantQueue.push(socket.player);
+                if (this.combatantQueue.length % 2 === 0) {
+                    this.startGame();
+                }
+                return;
+            case 'rename':
+                // console.log("Renaming user:", message.name)
+                // break
+                return;
+        }
+        if (socket.player.gameId < 0) {
+            console.log('No associated game to handle ', message.type, 'message');
+            return;
+        }
+        switch (message.type) {
             case 'summon':
-                const unitId = message.unitId;
+                const unitId = message.unitid;
                 const coord = new DoubledCoord(message.coord.col, message.coord.row);
-                this.game?.summon(unitId, coord);
+                this.games[socket.player.gameId]?.summon(socket.player, unitId, coord);
                 break;
             case 'skipsummon':
-                this.game?.skipSummon(socket.player);
+                this.games[socket.player.gameId]?.skipSummon(socket.player);
                 break;
             case 'move': {
                 const from = new DoubledCoord(message.from.col, message.from.row);
                 const to = new DoubledCoord(message.to.col, message.to.row);
-                this.game?.move(from, to);
+                this.games[socket.player.gameId].move(socket.player, from, to);
                 break;
             }
             case 'skipmove':
-                this.game?.skipMove(socket.player);
+                this.games[socket.player.gameId].skipMove(socket.player);
                 break;
             case 'attack': {
                 const from = new DoubledCoord(message.from.col, message.from.row);
                 const to = new DoubledCoord(message.to.col, message.to.row);
-                this.game?.attack(from, to);
+                this.games[socket.player.gameId].attack(socket.player, from, to);
                 break;
             }
             case 'skipattack':
-                this.game?.skipAttack(socket.player);
+                this.games[socket.player.gameId].skipAttack(socket.player);
                 break;
             case 'gamestate':
-                if (this.game) {
-                    socket.send(JSON.stringify({ type: 'gamestate', state: this.game.getState() }));
-                }
+                const state = this.games[socket.player.gameId].getState();
+                socket.send(JSON.stringify({ type: 'gamestate', state }));
                 break;
             default:
                 console.log("Received message with invalid type:", message.type);
@@ -82,15 +119,50 @@ export class GameServer {
         }
     }
     startGame() {
-        this.game = new Game();
-        this.game.eventEmitter.on('gamestate', state => {
-            console.log('sending gamestate to', this.connections.length, 'connections');
+        const player1 = this.combatantQueue.splice(0, 1)?.[0];
+        const p1c = this.connections.find(c => c.socket.player == player1);
+        if (p1c) {
+            console.log('Telling player', player1.id, 'to play as index', 0);
+            p1c.socket.send(JSON.stringify({ type: 'playerindex', playerindex: 0 }));
+        }
+        else {
+            console.log('No connection for player 1 found, now thats perplexing');
+        }
+        const player2 = this.combatantQueue.splice(0, 1)?.[0];
+        const p2c = this.connections.find(c => c.socket.player == player2);
+        if (p2c) {
+            console.log('Telling player', player2.id, 'to play as index', 1);
+            p2c.socket.send(JSON.stringify({ type: 'playerindex', playerindex: 1 }));
+        }
+        else {
+            console.log('No connection for player 2 found, whoda thunk');
+        }
+        const game = new Game(player1, player2);
+        const players = [player1, player2];
+        game.id = this.games.length;
+        player1.gameId = game.id;
+        player2.gameId = game.id;
+        game.eventEmitter.on('gamestate', (game) => {
+            const state = game.getState();
             for (const connection of this.connections) {
-                connection.socket.send(JSON.stringify({ type: 'gamestate', state }));
+                if (players.includes(connection.socket.player)) {
+                    connection.socket.send(JSON.stringify({ type: 'gamestate', state }));
+                }
             }
         });
-        this.game.emitGameState();
-        this.game.nextTurn();
+        game.eventEmitter.on('gamestats', (game) => {
+            const stats = game.getStats();
+            for (const connection of this.connections) {
+                if (players.includes(connection.socket.player)) {
+                    connection.socket.send(JSON.stringify({ type: 'gamestats', stats }));
+                }
+            }
+            this.combatantQueue = this.combatantQueue.filter(p => !game.players.includes(p));
+            this.games = this.games.filter(g => g != game);
+        });
+        // this.game.emitGameState()
+        game.nextTurn();
+        this.games.push(game);
     }
 }
 var ZoneName;
@@ -104,45 +176,55 @@ class Zone {
     units = [];
 }
 export class Game {
+    id = -1;
+    started = new Date();
+    ended;
     eventEmitter;
     players = [];
     boardUnits = [];
     playerState = [];
     turn = {
-        player: 0,
-        stage: TurnStage.Summon,
+        index: 0,
+        playerIndex: -1,
+        // stage: TurnStage.Summon,
         unitsMoved: [],
         unitsAttacked: [],
-        summoned: [],
+        unitsSummoned: [],
     };
-    constructor() {
+    constructor(player1, player2) {
         console.log('New game started');
         this.eventEmitter = new EventEmitter();
-        const player1 = new Player("Player 1");
-        const player2 = new Player("Player 2");
         this.players.push(player1);
         this.players.push(player2);
+        player1.index = 0;
+        player2.index = 1;
+        this.turn.playerIndex = Math.round(Math.random());
         console.log("Shuffling deck for players and drawing hand...");
         this.players.forEach((player, index) => {
             const state = new GamePlayerState();
             state.draw.add(Units.filter(u => u.id != UnitId.Summoner));
             state.draw.shuffle();
-            state.hand.add(state.draw.draw(5));
+            const drawn = state.draw.draw(5);
+            state.hand.add(drawn);
             state.energy = 0;
             this.playerState.push(state);
+            drawn.forEach(d => this.recordDrawnUnitCost(player, d.cost));
         });
-        console.log('Spawning in summoners');
+        const summoner = UnitId.unit(UnitId.Summoner);
         this.boardUnits.push({
-            id: UnitId.Summoner,
-            player: 1,
-            coord: new DoubledCoord(0, 2)
+            id: summoner.id,
+            playerIndex: 0,
+            coord: new DoubledCoord(-6, 0),
+            remainingHealth: summoner.health,
         });
         this.boardUnits.push({
-            id: UnitId.Summoner,
-            player: 2,
-            coord: new DoubledCoord(12, 2)
+            id: summoner.id,
+            playerIndex: 1,
+            coord: new DoubledCoord(6, 0),
+            remainingHealth: summoner.health,
         });
-        this.emitGameState();
+        // this.stats = new GameStats();
+        // this.emitGameState()
     }
     getState() {
         const gameState = {
@@ -150,9 +232,10 @@ export class Game {
             players: [],
             turn: this.turn,
         };
-        this.playerState.forEach((playerState, id) => {
+        this.playerState.forEach((playerState, index) => {
+            // TODO: Can't we just return the actual players here?
             gameState.players.push({
-                id: id + 1,
+                index: index,
                 energy: playerState.energy,
                 energyGain: playerState.energyGain,
                 draw: playerState.draw.getUnitIds(),
@@ -162,21 +245,25 @@ export class Game {
         });
         return gameState;
     }
+    getPlayerIds() {
+        return this.players.map(p => p.id);
+    }
     nextTurn() {
-        this.turn.player++;
-        if (this.turn.player > 2) {
-            this.turn.player = 1;
+        this.turn.index++;
+        this.turn.playerIndex++;
+        if (this.turn.playerIndex > 1) {
+            this.turn.playerIndex = 0;
         }
-        this.turn.stage = TurnStage.Summon;
-        this.turn.summoned = [];
+        // this.turn.stage = TurnStage.Summon
         this.turn.unitsMoved = [];
         this.turn.unitsAttacked = [];
-        const playerIndex = this.turn.player - 1;
-        console.log('Handling player', playerIndex + 1, 'turn');
+        this.turn.unitsSummoned = [];
+        console.log('Handling player', this.turn.playerIndex, 'turn');
         this.calculateEnergyGain();
-        const playerState = this.playerState[playerIndex];
-        console.log('Increasing player', playerIndex, 'energy from', playerState.energy, 'to', playerState.energy + playerState.energyGain);
+        const playerState = this.playerState[this.turn.playerIndex];
+        console.log('Increasing player', this.turn.playerIndex, 'energy from', playerState.energy, 'to', playerState.energy + playerState.energyGain);
         playerState.energy += playerState.energyGain;
+        playerState.energyGained += playerState.energyGain;
         this.emitGameState();
     }
     calculateEnergyGain() {
@@ -185,7 +272,7 @@ export class Game {
             let energyGain = 1;
             for (const [coord, energy] of EnergyCoords) {
                 for (const unit of this.boardUnits) {
-                    if (unit.player != Number(playerIndex) + 1) {
+                    if (unit.playerIndex != playerIndex) {
                         continue;
                     }
                     if (unit.coord.equals(coord)) {
@@ -196,57 +283,111 @@ export class Game {
             state.energyGain = energyGain;
         }
     }
-    summon(unitId, coord) {
-        const playerIndex = this.turn.player - 1;
-        const playerNum = this.turn.player;
-        const playerState = this.playerState[playerIndex];
+    summon(player, unitId, coord) {
+        const playerState = this.playerState[this.turn.playerIndex];
         const unit = UnitId.unit(unitId);
-        console.log(`Player ${playerNum} summoning ${unit.name} to ${coord.toString()}`);
+        console.log(`Player ${this.turn.playerIndex} summoning ${unit.name} to ${coord.toString()}`);
         const unitState = {
             id: unitId,
             coord,
-            player: this.turn.player,
+            playerIndex: this.turn.playerIndex,
+            remainingHealth: unit.health,
         };
         if (playerState.energy < unit.cost) {
             console.log(`Not enough muhlah to summon ${unit.name} have ${playerState.energy}/${unit.cost}, nice try`);
             return;
         }
         playerState.energy -= unit.cost;
-        const summoner = this.boardUnits.find(unit => unit.player == playerNum && unit.id == UnitId.Summoner);
+        const summoner = this.boardUnits.find(unit => unit.playerIndex == this.turn.playerIndex && unit.id == UnitId.Summoner);
         if (coord.rdoubledToCube().distance(summoner.coord.rdoubledToCube()) != 1) {
             console.log('Cannae summon there ya nonse');
             return;
         }
-        this.turn.summoned.push(unitState);
+        this.turn.unitsSummoned.push(unitState.coord);
         this.boardUnits.push(unitState);
         playerState.hand.removeUnit(unitId);
-        // TODO: do we draw now or at the end of the summon turn?
-        playerState.hand.add(playerState.draw.draw(1));
+        const drawn = playerState.draw.draw(1);
+        this.recordDrawnUnitCost(player, drawn[0].cost);
+        playerState.hand.add(drawn);
+        playerState.energySpent += unit.cost;
+        playerState.unitsSummoned++;
         // this.turn.stage = TurnStage.Move
         this.calculateEnergyGain();
         this.emitGameState();
     }
     skipSummon(player) {
-        if (player != this.turn.player) {
+        if (player.id != this.players[this.turn.playerIndex].id) {
             console.log('You cant skip another player summon');
             return;
         }
-        console.log('Player', this.turn.player, 'skipping summon');
-        this.turn.stage = TurnStage.Move;
+        console.log('Player', this.turn.playerIndex, 'skipping summon');
+        // this.turn.stage = TurnStage.Move
         this.emitGameState();
     }
-    move(from, to) {
-        console.log('Player', this.turn.player, 'attempting to move from', from, 'to', to);
+    move(player, from, to) {
+        if (player.id != this.players[this.turn.playerIndex].id) {
+            console.log('You cant make another player move');
+            return;
+        }
+        console.log('Player', this.turn.playerIndex, 'attempting to move from', from, 'to', to);
         const unitState = this.boardUnits.find(unit => unit.coord.equals(from));
         if (!unitState) {
             console.log('No unit');
             return;
         }
         const unit = UnitId.unit(unitState.id);
+        const unitAt = (hex) => {
+            return this.boardUnits.find(unit => unit.coord.rdoubledToCube().equals(hex));
+        };
+        const isEnemy = (unit) => {
+            return unit != undefined && unit.playerIndex != this.turn.playerIndex;
+        };
+        const start = unitState.coord.rdoubledToCube();
+        const engaged = [];
+        for (let next of start.neighbors()) {
+            if (isEnemy(unitAt(next))) {
+                engaged.push(next);
+            }
+        }
+        const frontier = [];
+        frontier.push(start);
+        const reached = [];
+        reached.push(start);
+        while (frontier.length) {
+            const current = frontier.shift();
+            for (let next of current.neighbors()) {
+                if (unitAt(next)) {
+                    continue;
+                }
+                if (next.distance(start) > unit.movement) {
+                    continue;
+                }
+                if (next.distance(start) > 10) {
+                    continue;
+                }
+                if (engaged.find(e => e.distance(next) == 1)) {
+                    continue;
+                }
+                if (!reached.find(r => r.equals(next))) {
+                    frontier.push(next);
+                    reached.push(next);
+                }
+            }
+        }
+        const toHex = to.rdoubledToCube();
+        const reachable = reached.find(r => r.equals(toHex)) != null;
         const distance = from.rdoubledToCube().distance(to.rdoubledToCube());
+        console.log('distance', distance);
+        console.log('reachable hexagons', reached.length);
+        console.log('within reachable area', reachable);
+        console.log('reachable area', reached.map(r => DoubledCoord.rdoubledFromCube(r)));
+        if (!reachable) {
+            console.log('Cannae make it there, not in reachable area');
+            return;
+        }
         let hasSummoningSickness = false;
-        for (const summoned of this.turn.summoned) {
-            if (summoned.coord.equals(from)) {
+        for (const summoned of this.turn.unitsSummoned) {
+            if (summoned.equals(from)) {
                 hasSummoningSickness = true;
                 break;
             }
@@ -271,32 +412,37 @@ export class Game {
         }
         unitState.coord = to;
         this.turn.unitsMoved.push(to);
-        let unitCount = this.boardUnits.filter(unit => unit.player == this.turn.player).length;
-        if (this.turn.summoned.length) {
+        let unitCount = this.boardUnits.filter(unit => unit.playerIndex == this.turn.playerIndex).length;
+        if (this.turn.unitsSummoned.length) {
             unitCount--;
         }
         if (this.turn.unitsMoved.length == unitCount) {
-            console.log('All units moved, progressing to attack phase');
-            this.turn.stage = TurnStage.Attack;
+            // console.log('All units moved, progressing to attack phase')
+            // this.turn.stage = TurnStage.Attack
         }
         this.calculateEnergyGain();
         this.emitGameState();
     }
     skipMove(player) {
-        if (player != this.turn.player) {
+        if (player.id != this.players[this.turn.playerIndex].id) {
             console.log('You cant skip another player move');
             return;
         }
-        console.log('Player', this.turn.player, 'skipping move');
-        this.turn.stage = TurnStage.Attack;
+        console.log('Player', this.turn.playerIndex, 'skipping move');
+        // this.turn.stage = TurnStage.Attack
+        console.log('next turn:');
+        this.nextTurn();
         this.emitGameState();
     }
-    attack(from, to) {
-        const playerNum = this.turn.player;
-        console.log('Player', playerNum, 'attacking from', from, 'to', to);
+    attack(player, from, to) {
+        if (player.id != this.players[this.turn.playerIndex].id) {
+            console.log('You cant make another player attack');
+            return;
+        }
+        console.log('Player', this.turn.playerIndex, 'attacking from', from, 'to', to);
         let hasSummoningSickness = false;
-        for (const summoned of this.turn.summoned) {
-            if (summoned.coord.equals(from)) {
+        for (const summoned of this.turn.unitsSummoned) {
+            if (summoned.equals(from)) {
                 hasSummoningSickness = true;
                 break;
             }
@@ -322,15 +468,22 @@ export class Game {
             console.log('This unit thinks one battle is enough for the time being');
             return;
         }
-        const isFriendly = this.boardUnits.find(u => u.coord.equals(to) && u.player == playerNum);
+        const isFriendly = this.boardUnits.find(u => u.coord.equals(to) && u.playerIndex == this.turn.playerIndex);
         if (isFriendly) {
             console.log('Whoa there laddy, that ones on our side');
             return;
         }
-        const healthRemaining = (toUnitState.remainingHealth || toUnit.health) - fromUnit.damage;
+        const healthRemaining = Math.max((toUnitState.remainingHealth || toUnit.health) - fromUnit.damage, 0);
+        const damage = (toUnitState.remainingHealth || toUnit.health) - healthRemaining;
+        console.log("Hit for", damage, 'damage');
+        const attackingPlayerState = this.playerState[this.turn.playerIndex];
+        const defendingPlayerState = this.playerState.filter(s => s != attackingPlayerState).at(0);
+        attackingPlayerState.damageDealt += damage;
+        defendingPlayerState.damageReceived += damage;
         toUnitState.remainingHealth = healthRemaining;
-        if (healthRemaining <= 0) {
+        if (healthRemaining == 0) {
             console.log('Ohhh shiiit, unit down!');
+            defendingPlayerState.unitsLost++;
             let filtered = [];
             for (const unit of this.boardUnits) {
                 if (unit.coord.equals(to)) {
@@ -341,31 +494,71 @@ export class Game {
             this.boardUnits = filtered;
             if (toUnit.id == UnitId.Summoner) {
                 console.log('💥💣🔥🧨🎇🚨 SUMMONER DOWN!!!');
-                console.log('Player', this.turn.player, 'wins!!!!!');
-                const winningSummonerState = this.boardUnits.find(unit => unit.player == this.turn.player && unit.id == UnitId.Summoner);
+                console.log('Player', this.turn.playerIndex, 'wins!!!!!');
+                this.ended = new Date();
+                this.players[0].gameId = -1;
+                this.players[1].gameId = -1;
+                const winningSummonerState = this.boardUnits.find(unit => unit.playerIndex == this.turn.playerIndex && unit.id == UnitId.Summoner);
                 this.boardUnits = [winningSummonerState];
+                this.emitGameStats();
+                return;
             }
         }
         this.turn.unitsAttacked.push(from);
         this.calculateEnergyGain();
         this.emitGameState();
-        const unitCount = this.boardUnits.filter(unit => unit.player == this.turn.player).length;
+        const unitCount = this.boardUnits.filter(unit => unit.playerIndex == this.turn.playerIndex).length;
         if (this.turn.unitsAttacked.length == unitCount) {
-            console.log('All units attacked, progressing to next turn');
-            this.nextTurn();
+            // console.log('All units attacked, progressing to next turn')
+            // this.nextTurn()
         }
     }
     skipAttack(player) {
-        if (player != this.turn.player) {
+        if (player.id != this.players[this.turn.playerIndex].id) {
             console.log('You cant skip another player attack');
             return;
         }
-        console.log('Player', this.turn.player, 'skipping attack');
+        console.log('Player', this.turn.playerIndex, 'skipping attack');
         this.nextTurn();
     }
     emitGameState() {
         console.log('emitting state');
-        this.eventEmitter.emit('gamestate', this.getState());
+        this.eventEmitter.emit('gamestate', this);
+    }
+    recordDrawnUnitCost(player, cost) {
+        const drawCostDistribution = this.playerState[player.index].drawCostDistribution;
+        const previous = Number(drawCostDistribution.get(cost)) || 0;
+        drawCostDistribution.set(cost, previous + 1);
+    }
+    emitGameStats() {
+        console.log('emitting stats');
+        this.eventEmitter.emit('gamestats', this);
+    }
+    getStats() {
+        const gameStats = {
+            id: this.id,
+            turns: this.turn.index,
+            started: this.started.valueOf(),
+            ended: this.ended?.valueOf() || -1,
+            winner: this.turn.playerIndex,
+            player: [],
+        };
+        for (let i = 0; i < 2; i++) {
+            let drawCostDistribution = {};
+            for (let i2 = 1; i2 <= 6; i2++) {
+                drawCostDistribution[i2] = this.playerState[i].drawCostDistribution.get(i2) || 0;
+            }
+            gameStats.player.push({
+                unitsSummoned: this.playerState[i].unitsSummoned,
+                unitsLost: this.playerState[i].unitsLost,
+                damageDealt: this.playerState[i].damageDealt,
+                damageReceived: this.playerState[i].damageReceived,
+                energyGained: this.playerState[i].energyGained,
+                energySpent: this.playerState[i].energySpent,
+                drawCostDistribution,
+            });
+        }
+        return gameStats;
     }
 }
 class GamePlayerState {
@@ -374,6 +567,13 @@ class GamePlayerState {
     hand = new UnitCollection([]);
     energy = 0;
     energyGain = 1;
+    energyGained = 0;
+    energySpent = 0;
+    unitsSummoned = 0;
+    unitsLost = 0;
+    damageDealt = 0;
+    damageReceived = 0;
+    drawCostDistribution = new Map();
 }
 export var TurnStage;
 (function (TurnStage) {
